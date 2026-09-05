@@ -325,6 +325,53 @@ ratio compares.
 `Client.listTools()`; it needs its own raw-stdout tee, documented in
 PLAN.md's Phase 1 deliverables and DECISIONS.md #5's exact-boundary note.
 
+**`schemaReuseRatio`, corrected again — this time post-Phase-1, before
+Phase 2's implementation began.** The hypothesis going into Phase 2 was
+that a `$ref`-free server should read `schemaReuseRatio ≈ 1.0`, since
+without `$defs` to duplicate there's nothing left for the ratio to
+measure but key-order noise. Checked against three real `$ref`-free
+servers (`server-everything`, `server-filesystem`, `@upstash/
+context7-mcp` — confirmed zero `$ref`s each) and it didn't hold:
+1.5594, 1.6802, 1.0682. Decomposing the gap per server found JCS
+reordering responsible for essentially none of it (single-digit token
+deltas, sometimes negative); the rest traced to `title`, `annotations`,
+`outputSchema`, and `execution` — current MCP `Tool` fields that
+`canonicalTokens`'s basis has always excluded by design, but that the
+ratio's `wireTokens`-based numerator was still counting in full.
+`server-filesystem` sends `outputSchema` on every one of its 14 tools,
+which is why it read highest; `context7-mcp` sends only a small
+`annotations` block, which is why it read closest to 1.0. None of that
+is `$defs` waste — it's ordinary, spec-legal tool metadata — so the old
+ratio's "this server wastes tokens" framing was wrong for any server
+populating those fields, not just noisy at the margins.
+
+**Fixed the same way spike 5 fixed `wireTokens` itself: narrow the
+string, not the field.** A new `wireBasisTokens` count is sourced from
+the same raw-stdout tee, scoped to exactly `{name, description,
+inputSchema}` in their original wire order, nothing else. Redefined
+`schemaReuseRatio = sum(wireBasisTokens) / sum(canonicalTokens)`.
+Re-measured, the same three `$ref`-free servers read **0.9909**,
+**0.9911**, **1.0000** — confirming the field-set mismatch was the whole
+effect, and what remains is exactly the tokenizer-boundary noise
+`frameTokens` already showed to be single digits. `@notionhq/
+notion-mcp-server` recomputed under the corrected formula reads
+**3.5152** (17,161 / 4,882 — `wireBasisTokens` sums slightly below the
+old `wireTokens` sum of 17,498 now that non-schema fields are excluded
+from it too), still clearly elevated: real `$defs` duplication is
+confirmed as the dominant signal, not an artifact of the granularity or
+field-scope bugs found across this and the two corrections above it.
+
+A `refCount` (total `$ref` occurrences pre-inlining, free from the
+inliner) is now recorded alongside the ratio so a reading is attributed
+rather than guessed: `refCount = 0` with the ratio near 1.0 confirms the
+metric read clean for that server; `refCount > 0` with an elevated ratio
+is the actual finding. Full reasoning and the corrected formula live in
+DECISIONS.md #5/#6; this note exists so the trail of three successive
+corrections to the same number — mislabeled quantity (spike 4) →
+granularity mismatch (spike 5, caught on review) → field-scope mismatch
+(this note) — stays in one place rather than getting silently
+overwritten.
+
 ## 6. GitHub Actions bot-commit mechanics — PASS: mechanics confirmed via `workflow_dispatch`
 
 Real repo (`onetodone/toollock`), two throwaway workflows — not the real

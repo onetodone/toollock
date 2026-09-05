@@ -39,6 +39,14 @@ below for how each phase concluded.
   `npm run build` + a direct run of the compiled `dist/cli.js` both
   checked by hand. `package.json` pins `@modelcontextprotocol/sdk` to the
   exact `1.30.0` (DECISIONS.md #15).
+  A field-scope mismatch in `schemaReuseRatio` (caught post-Phase-1,
+  before Phase 2's implementation began — the ratio read meaningfully
+  above 1.0 on three confirmed `$ref`-free servers, traced to
+  `title`/`annotations`/`outputSchema`/`execution` fields counted in the
+  numerator but never in `canonicalTokens`'s basis) is corrected in
+  DECISIONS.md #5/#6 directly, with a `wireBasisTokens` field added and
+  Notion's recorded ratio updated to 3.5152, rather than logged as a
+  separate phase-log line.
 
 ## Open threads
 

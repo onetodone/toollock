@@ -108,8 +108,13 @@ before committing later phases to a design:
    same bytes being hashed) and `wireTokens` (the raw `tools/list`
    response's `tools` array only, before any normalization — explicitly
    not the surrounding JSON-RPC envelope, since a client never loads RPC
-   framing into context). Confirm `schemaReuseRatio = wireTokens /
-   canonicalTokens` is stable given the same two fixed strings.
+   framing into context). Confirm `schemaReuseRatio = wireBasisTokens /
+   canonicalTokens` is stable given the same fixed strings —
+   `wireBasisTokens` being `wireTokens`'s own tee, scoped to just
+   `{name, description, inputSchema}` so the ratio isn't polluted by
+   non-schema fields (`title`, `annotations`, `outputSchema`,
+   `execution`) that `canonicalTokens` never counted in the first place
+   (corrected post-Phase-1, DECISIONS.md #5).
 6. GitHub Actions bot-commit mechanics: a trivial no-op scheduled workflow
    that stages `data/`, commits as a bot identity, pushes, using only the
    automatic `GITHUB_TOKEN` and `permissions: contents: write`.
@@ -174,13 +179,20 @@ prompts, one without).
 is a hard capture failure for that tool, not a silent fallback
 (DECISIONS.md #3/known limitations) — `required[]`/`enum[]` sort, JCS
 wrapper, `schemaHash`/`promptHash` (sha256 of the split canonical bytes);
-two token counters at matching per-tool granularity — `canonicalTokens`
-(post-inline JCS bytes, hash-coupled) and `wireTokens` (each tool's own
-raw JSON, original key order, envelope and array framing excluded) —
-plus a server-level `frameTokens` (whole-array `wireTokens` minus the
-per-tool sum) and the derived `schemaReuseRatio = sum(wireTokens) /
-sum(canonicalTokens)` (`frameTokens` excluded from the ratio), all on the
-fixed serializations from Phase 0 spike 5 (DECISIONS.md #5).
+three token counters at matching per-tool granularity — `canonicalTokens`
+(post-inline JCS bytes, hash-coupled), `wireTokens` (each tool's own raw
+JSON, original key order, envelope and array framing excluded), and
+`wireBasisTokens` (the same raw tee, scoped to just `{name, description,
+inputSchema}`, no normalization) — plus a server-level `frameTokens`
+(whole-array `wireTokens` minus the per-tool sum), `refCount` (total
+`$ref` occurrences pre-inlining, a free byproduct of the inliner), and
+the derived `schemaReuseRatio = sum(wireBasisTokens) /
+sum(canonicalTokens)` (`frameTokens` excluded from the ratio;
+`wireBasisTokens` rather than `wireTokens` as the numerator so the ratio
+isn't polluted by non-schema fields `canonicalTokens` never counted —
+checked against three `$ref`-free servers reading ~1.0 before Phase 2
+began, DECISIONS.md #5), all on the fixed serializations from Phase 0
+spike 5 (DECISIONS.md #5).
 
 The `ToolSchema`/`PromptSchema` split is defined explicitly, not left
 implicit:
@@ -217,8 +229,9 @@ spike 3's method into the four `list-*` buckets (DECISIONS.md #12);
 (`cron: '0 6 * * *'`) for the remainder of the build window — not
 weekly yet, see the cadence note below — zero configured secrets,
 `permissions: contents: write` only, explicit `git add data/`; a snapshot
-writer only — capture + canonicalize + hash + both token counts
-(`canonicalTokens`, `wireTokens`) + `schemaReuseRatio` per server,
+writer only — capture + canonicalize + hash + all three token counts
+(`canonicalTokens`, `wireTokens`, `wireBasisTokens`) + `schemaReuseRatio`
+per server,
 appended to `data/` as a dated entry (DECISIONS.md #5). No drift
 computation yet; the
 commit message for this phase is `data: snapshot <ISO date> (<N>

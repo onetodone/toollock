@@ -103,9 +103,9 @@ a prompt's hash was divided. Defined in Phase 2:
   Golden fixtures mirror the tool invariants: a description-only change on
   a prompt argument moves `promptHash` and leaves `schemaHash` stable.
 
-## 5. Token counting — two bases, not one (revised in Phase 0 spike 4)
+## 5. Token counting — three bases, not one (revised in Phase 0 spike 4; `wireBasisTokens` added post-Phase-1)
 
-**Decision:** `gpt-tokenizer` (o200k), offline, computing two separate
+**Decision:** `gpt-tokenizer` (o200k), offline, computing separate
 token counts, kept side by side rather than collapsed into one:
 
 - `canonicalTokens` — tokenizes the JCS-canonical bytes of `{name,
@@ -175,18 +175,66 @@ token counts, kept side by side rather than collapsed into one:
   missing measurement is recoverable; a wrong one in a published dataset
   isn't.
 
-A third, derived field travels with them: `schemaReuseRatio =
-sum(wireTokens) / sum(canonicalTokens)` — both sums at the same per-tool
-granularity, `frameTokens` excluded from both sides — recorded per
-server per snapshot in the dataset (Phase 2.5/5). A ratio meaningfully
-above 1 names a specific, fixable inefficiency in that specific server —
-e.g. `@notionhq/notion-mcp-server` measured at **3.5842** (17,498 /
-4,882) in Phase 0, because it ships its entire `$defs` dictionary to
-every tool regardless of what that tool's own schema actually
-references. This is a measurement of the *server*, not of `toollock`
-itself — recorded as a dataset field precisely because it's evidence,
-not an artifact of the tool's own choices, and not an artifact of
-mismatched tokenization granularity either.
+- `wireBasisTokens` — sourced from the same raw-stdout tee as
+  `wireTokens`, same no-normalization rule, but scoped down to exactly
+  the three canonical-basis keys (`name`, `description`, `inputSchema`),
+  preserving whatever relative order those three had on the wire.
+  Every other field the tool carries — `title`, `annotations`,
+  `outputSchema`, `execution`, or anything else a server attaches — is
+  dropped, not counted. Exists solely to give `schemaReuseRatio` (below)
+  an apples-to-apples numerator; `wireTokens` itself is untouched and
+  stays the full-object count `contextBudget` needs, since a real client
+  loads the whole tool object, not just its schema-hashed subset.
+
+**`schemaReuseRatio`, corrected post-Phase-1 (caught before Phase 2's
+implementation, not after):** `schemaReuseRatio = sum(wireBasisTokens) /
+sum(canonicalTokens)` — both sums at the same per-tool granularity,
+`frameTokens` excluded from both sides — recorded per server per
+snapshot in the dataset (Phase 2.5/5).
+
+The original formula (`sum(wireTokens) / sum(canonicalTokens)`, full
+tool object over the hash-coupled subset) was checked against three
+servers confirmed to carry zero `$ref`s (`server-everything`,
+`server-filesystem`, `@upstash/context7-mcp`) on the assumption that a
+`$ref`-free server should read ~1.0. It didn't: 1.5594, 1.6802, 1.0682.
+The gap wasn't key-order noise — decomposing it per server showed JCS
+reordering contributes next to nothing (single digits, sometimes
+slightly negative), while the entire remainder traced to `title`,
+`annotations`, `outputSchema`, and `execution` — current, spec-legal
+MCP `Tool` fields that `canonicalTokens`'s basis has always excluded (by
+design, for hash-coupling — decision #4 already puts `annotations` in
+`promptHash`'s text bucket, not the structural one) but that the old
+`wireTokens`-based numerator was still counting. `server-filesystem`
+sends `outputSchema` on all 14 of its tools, which is why it read
+highest; `context7-mcp` sends only a small `annotations` block, which is
+why it read closest to 1.0. None of that is `$defs` waste — it's normal
+current-spec tool metadata — so the old ratio's "this server wastes X%
+of its tokens" framing was wrong by construction for any server that
+populates those fields, not just as noise at the margins.
+
+Re-measured with `wireBasisTokens` as the numerator, the same three
+servers read **0.9909**, **0.9911**, and **1.0000** — the field-set
+mismatch was the entire effect; what's left is canonicalization's own
+tokenizer-boundary noise, consistent with `frameTokens`'s earlier
+single-digit finding. `@notionhq/notion-mcp-server` (152 `$ref`s across
+24 tools) recomputed under the corrected formula reads **3.5152**
+(17,161 / 4,882 — down slightly from the old 17,498 numerator now that
+non-schema fields are excluded from it too), still clearly elevated:
+confirms real `$defs` duplication remains the dominant signal once the
+field-set mismatch is removed, rather than being an artifact of it.
+
+A `refCount` (total `$ref` occurrences across a server's tool input
+schemas, pre-inlining — a free byproduct of the inliner) travels
+alongside the ratio in the dataset so a reading can be attributed
+correctly: `refCount = 0` with `schemaReuseRatio` near 1.0 confirms the
+metric is clean for that server; `refCount > 0` with an elevated ratio
+is the actual "specific, fixable inefficiency" claim this field is meant
+to support — e.g. `@notionhq/notion-mcp-server`, which ships its entire
+`$defs` dictionary to every tool regardless of what that tool's own
+schema actually references. This is a measurement of the *server*, not
+of `toollock` itself — recorded as a dataset field precisely because
+it's evidence, not an artifact of the tool's own choices, and not an
+artifact of mismatched tokenization granularity or field scope either.
 
 Absolute numbers are tokenizer-dependent; only relative ratios (between
 servers, or between `wireTokens` and `canonicalTokens` for the same
@@ -227,24 +275,31 @@ server) are claimed as meaningful across implementations.
   `wireTokens` stays truthful to what a model's context window is
   actually billed for, so `budget` and `contextBudget` aren't quietly
   wrong by a multiple.
-- `schemaReuseRatio` costs nothing extra to compute once both bases
-  exist, and it's the kind of concrete, per-server finding — "this
-  specific server wastes ~72% of its tool-definition tokens on unused
-  shared `$defs`" — that makes the published dataset more than a hash
-  log.
+- `schemaReuseRatio` costs nothing extra to compute once `wireBasisTokens`
+  and `canonicalTokens` both exist, and it's the kind of concrete,
+  per-server finding — "this specific server wastes ~72% of its
+  tool-definition tokens on unused shared `$defs`" — that makes the
+  published dataset more than a hash log. That claim only holds once the
+  ratio's numerator excludes non-schema fields (`wireBasisTokens`, not
+  raw `wireTokens`) — confirmed by checking three `$ref`-free servers
+  read ~1.0 under the corrected formula before trusting it on servers
+  that do have `$ref`s.
 
 ## 6. `tools.lock` format
 
 **Decision:** JSON, sorted keys, human-diffable in a PR. Stores server id,
-transport, both hashes, per-tool token counts — `canonicalTokens` and
-`wireTokens` each, same per-tool granularity (decision #5; `wireTokens`
-is `null` with a reason string when the tee/`Client` cross-check fails,
-never a best-effort guess) — a server-level `frameTokens` (the small
-whole-array-vs-per-tool-sum gap, decision #5), a total `contextBudget`
-(`sum(wireTokens) + frameTokens`, since that's what a real client's
-context window pays; `canonicalTokens` stays coupled to the hashes
-instead, see decision #5), and version information — but **not** a
-pinned package version (corrected during planning, see below). Instead:
+transport, both hashes, per-tool token counts — `canonicalTokens`,
+`wireTokens`, and `wireBasisTokens` each, same per-tool granularity
+(decision #5; `wireTokens`/`wireBasisTokens` are `null` with a reason
+string when the tee/`Client` cross-check fails, never a best-effort
+guess) — a server-level `frameTokens` (the small whole-array-vs-per-tool-
+sum gap, decision #5) and `refCount` (total `$ref` occurrences across the
+server's tool schemas pre-inlining, a free byproduct of the inliner,
+decision #5), a total `contextBudget` (`sum(wireTokens) + frameTokens`,
+since that's what a real client's context window pays; `canonicalTokens`
+stays coupled to the hashes instead, see decision #5), and version
+information — but **not** a pinned package version (corrected during
+planning, see below). Instead:
 
 - `serverInfo.version` — self-reported by the server in its `initialize`
   response. Free to capture, unverifiable.
