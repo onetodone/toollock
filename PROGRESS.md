@@ -2,12 +2,15 @@
 
 ## Current state
 
-**Phase 1 is complete; Phase 2 is next.** `src/mcp/connect.ts` and
-`src/mcp/capture.ts` exist and are tested against two real reference
-servers; `toollock capture <pkg>` runs end to end and prints raw JSON.
-No canonicalization, hashing, or token counting yet — that's Phase 2.
-See `docs/spikes/phase-0.md` for Phase 0's spike notes and the Phase log
-below for how each phase concluded.
+**Phase 2 is complete; Phase 2.5 is next.** `src/schema/` now has
+canonicalization (`$ref` inlining + cycle detection + required[]/enum[]
+sort + description-splitting), dual hashing (`schemaHash`/`promptHash`
+for both tools and prompts), and token counting (`canonicalTokens`,
+`wireTokens`, `wireBasisTokens`, `frameTokens`, `refCount`,
+`schemaReuseRatio`) — all pure functions over `Tool`/`Prompt` plus the
+raw wire tee, not yet wired into the CLI (`tools.lock` writing is
+Phase 3). See `docs/spikes/phase-0.md` for Phase 0's spike notes and the
+Phase log below for how each phase concluded.
 
 ## Phase log
 
@@ -47,6 +50,19 @@ below for how each phase concluded.
   DECISIONS.md #5/#6 directly, with a `wireBasisTokens` field added and
   Notion's recorded ratio updated to 3.5152, rather than logged as a
   separate phase-log line.
+- **Phase 2 (canonicalization + dual hashing + token counting) —
+  complete.** 2026-09-05. Commits: `6ab9a4c` (canonicalization),
+  `8d38855` (hashing), `4f8483a` (token counting). Verified by: `npm
+  test` — 31 tests total, all passing, zero network/spawn required for
+  the 29 new ones (Phase 2's own Test plan); golden fixtures prove every
+  scenario in Phase 2's Definition of Done for both tools and prompts
+  (description-only change moves `promptHash` and leaves `schemaHash`
+  stable; a new optional param/argument moves `schemaHash`; reordering
+  `enum`/`required` leaves it stable; hashing identical input twice is
+  byte-identical); `npm run build` clean. `gpt-tokenizer` and
+  `canonicalize` added as runtime dependencies (caret ranges — no
+  documented reproducibility risk analogous to decision #15's SDK pin
+  was found for either).
 
 ## Open threads
 
