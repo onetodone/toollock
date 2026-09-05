@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "createdAt": "2026-09-05",
+  "source": "Phase 0 spike 3 (docs/spikes/phase-0.md) — reuses that spike's real, already-probed results by design; not re-probed here. See PROGRESS.md and DECISIONS.md #18: v1's size is a scope decision, not a limitation — Phase 5 owns expanding it, and the real registry is now known to hold 4,000+ npm candidates (data/registry/2026-09-05.json), far more than a v1 bootstrap pass should probe.",
+  "servers": [
+    { "name": "server-filesystem", "package": "@modelcontextprotocol/server-filesystem", "bucket": "list-open", "spawnArgs": ["/tmp"] },
+    { "name": "server-memory", "package": "@modelcontextprotocol/server-memory", "bucket": "list-open" },
+    { "name": "server-everything", "package": "@modelcontextprotocol/server-everything", "bucket": "list-open" },
+    { "name": "server-sequential-thinking", "package": "@modelcontextprotocol/server-sequential-thinking", "bucket": "list-open" },
+    { "name": "context7-mcp", "package": "@upstash/context7-mcp", "bucket": "list-open" },
+    {
+      "name": "notion-mcp-server",
+      "package": "@notionhq/notion-mcp-server",
+      "bucket": "list-open",
+      "note": "Hands out its full tool schema with zero env vars set; auth is enforced at tools/call time, not tools/list time (Phase 0 spike 3). list-open here means 'schema capturable without credentials', not 'usable without an account' — see DECISIONS.md #12."
+    },
+    {
+      "name": "mcp-server-linear",
+      "package": "mcp-server-linear",
+      "bucket": "list-open",
+      "note": "Same caveat as notion-mcp-server (Phase 0 spike 3) — capturable without credentials, not usable without an account."
+    },
+    {
+      "name": "sentry-mcp-server",
+      "package": "@sentry/mcp-server",
+      "bucket": "list-env-gated",
+      "promotionEnv": { "SENTRY_ACCESS_TOKEN": "placeholder-not-a-real-credential" },
+      "caveat": "Promoted via a placeholder env var (not a real credential — DECISIONS.md #11's zero-secrets guarantee holds). The real tool list may vary by credential scope from what the placeholder probe saw (DECISIONS.md #12)."
+    },
+    {
+      "name": "server-brave-search",
+      "package": "@modelcontextprotocol/server-brave-search",
+      "bucket": "list-env-gated",
+      "promotionEnv": { "BRAVE_API_KEY": "placeholder-not-a-real-credential" },
+      "caveat": "Promoted via a placeholder env var (not a real credential). The real tool list may vary by credential scope from what the placeholder probe saw (DECISIONS.md #12)."
+    },
+    {
+      "name": "stripe-mcp",
+      "package": "@stripe/mcp",
+      "bucket": "list-timeout",
+      "reason": "tools/list proxies to a live authenticated HTTP endpoint; a placeholder key gets a real 401 from that endpoint, and the local process hangs rather than failing cleanly — the probe's timeout is what ends it, not the server (Phase 0 spike 3). Kept in the seed list with no measurement, per DECISIONS.md #12."
+    }
+  ]
+}
