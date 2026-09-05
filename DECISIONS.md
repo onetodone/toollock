@@ -140,6 +140,18 @@ token counts, kept side by side rather than collapsed into one:
   no Zod reconstruction happens in between, unlike going through the
   Client.
 
+  **The tee can fail where `listTools()` doesn't.** A server that writes
+  non-JSON-RPC noise to stdout — logging that should have gone to
+  stderr — would corrupt the tee's line-splitting while the SDK's own
+  `Client` (which validates every message) fails loudly on the same
+  response. Spike 1 sampled 5 real servers and found none doing this,
+  but 5 isn't 50. `capture.ts` verifies the teed tools array parses to
+  the same tool set `Client.listTools()` returned (same names, same
+  count) before trusting `wireTokens`. On mismatch, `wireTokens` is
+  recorded as `null` with a reason, never a best-effort number — a
+  missing measurement is recoverable; a wrong one in a published dataset
+  isn't.
+
 A third, derived field travels with them: `schemaReuseRatio = wireTokens
 / canonicalTokens`, recorded per server per snapshot in the dataset
 (Phase 2.5/5). A ratio meaningfully above 1 names a specific, fixable
@@ -191,11 +203,13 @@ server) are claimed as meaningful across implementations.
 
 **Decision:** JSON, sorted keys, human-diffable in a PR. Stores server id,
 transport, both hashes, per-tool token counts — `canonicalTokens` and
-`wireTokens` each (decision #5) — a total `contextBudget` (the
-`wireTokens` sum, since that's what a real client's context window pays;
-`canonicalTokens` stays coupled to the hashes instead, see decision #5),
-and version information — but **not** a pinned package version (corrected
-during planning, see below). Instead:
+`wireTokens` each (decision #5; `wireTokens` is `null` with a reason
+string when the tee/`Client` cross-check fails, never a best-effort
+guess) — a total `contextBudget` (the `wireTokens` sum, since that's what
+a real client's context window pays; `canonicalTokens` stays coupled to
+the hashes instead, see decision #5), and version information — but
+**not** a pinned package version (corrected during planning, see below).
+Instead:
 
 - `serverInfo.version` — self-reported by the server in its `initialize`
   response. Free to capture, unverifiable.

@@ -149,8 +149,16 @@ before the Client ever sees it, and Zod's `.parse()` rebuilds the object
 following the SDK's own schema field order, not the server's original
 key order — confirmed on a real server (Phase 0 spike 5) to change the
 token count (17,500 raw vs. 17,476 SDK-reconstructed) for reasons that
-have nothing to do with the target server. `toollock capture
-<server-spec>` CLI stub.
+have nothing to do with the target server. The tee has a failure mode
+`listTools()` doesn't: a server that logs non-JSON-RPC noise to stdout
+(spike 1 sampled 5 clean servers; a larger seed list will find one that
+isn't) would have `wireTokens` silently tokenize that noise while the
+SDK path fails loudly on the same response. So after computing
+`wireTokens` from the tee, `capture.ts` verifies the teed bytes parse to
+the same tool set the `Client` returned — same names, same count. On
+mismatch, `wireTokens` is recorded as `null` with a reason, never a
+best-effort number: a missing measurement is recoverable, a wrong one in
+the published dataset is not. `toollock capture <server-spec>` CLI stub.
 **Definition of done:** `capture` prints valid JSON for a real no-auth
 reference server, and does not throw against a server with no `prompts`
 capability.
