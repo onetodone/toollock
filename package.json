@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "test": "node --import tsx --test src/**/*.test.ts",
+    "check:hash-determinism": "tsx scripts/check-hash-determinism.ts"
   },
   "engines": {
     "node": ">=20"

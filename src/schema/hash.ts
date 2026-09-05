@@ -9,8 +9,40 @@ export interface Hashes {
   promptHash: string;
 }
 
+export interface CanonicalStrings {
+  /** The exact bytes `schemaHash` is a sha256 of. */
+  schemaCanonical: string;
+  /** The exact bytes `promptHash` is a sha256 of. */
+  promptCanonical: string;
+}
+
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function hashesOf({ schemaCanonical, promptCanonical }: CanonicalStrings): Hashes {
+  return { schemaHash: sha256(schemaCanonical), promptHash: sha256(promptCanonical) };
+}
+
+/**
+ * The canonical strings behind a tool's hashes, exposed separately so a
+ * cross-spawn hash mismatch (scripts/check-hash-determinism.ts) can be
+ * root-caused by diffing these instead of just seeing two different
+ * digests.
+ */
+export function computeToolCanonical(tool: Tool): CanonicalStrings {
+  const sorted = canonicalizeInputSchema((tool.inputSchema ?? {}) as JsonValue);
+  const { structure, descriptions } = splitDescriptions(sorted);
+
+  return {
+    schemaCanonical: toCanonicalString({ inputSchema: structure }),
+    promptCanonical: toCanonicalString({
+      name: tool.name,
+      description: tool.description ?? null,
+      paramDescriptions: descriptions ?? null,
+      annotations: (tool.annotations as JsonValue | undefined) ?? null,
+    }),
+  };
 }
 
 /**
@@ -21,18 +53,7 @@ function sha256(value: string): string {
  * not structural, per decision #4's `annotations.title` resolution).
  */
 export function computeToolHashes(tool: Tool): Hashes {
-  const sorted = canonicalizeInputSchema((tool.inputSchema ?? {}) as JsonValue);
-  const { structure, descriptions } = splitDescriptions(sorted);
-
-  const schemaCanonical = toCanonicalString({ inputSchema: structure });
-  const promptCanonical = toCanonicalString({
-    name: tool.name,
-    description: tool.description ?? null,
-    paramDescriptions: descriptions ?? null,
-    annotations: (tool.annotations as JsonValue | undefined) ?? null,
-  });
-
-  return { schemaHash: sha256(schemaCanonical), promptHash: sha256(promptCanonical) };
+  return hashesOf(computeToolCanonical(tool));
 }
 
 /**
@@ -44,17 +65,21 @@ export function computeToolHashes(tool: Tool): Hashes {
  * isn't a set of interchangeable values; reordering it changes template
  * position).
  */
-export function computePromptHashes(prompt: Prompt): Hashes {
+export function computePromptCanonical(prompt: Prompt): CanonicalStrings {
   const args = prompt.arguments ?? [];
 
-  const schemaCanonical = toCanonicalString({
-    arguments: args.map((arg) => ({ name: arg.name, required: arg.required ?? false })),
-  });
-  const promptCanonical = toCanonicalString({
-    name: prompt.name,
-    description: prompt.description ?? null,
-    argumentDescriptions: args.map((arg) => ({ name: arg.name, description: arg.description ?? null })),
-  });
+  return {
+    schemaCanonical: toCanonicalString({
+      arguments: args.map((arg) => ({ name: arg.name, required: arg.required ?? false })),
+    }),
+    promptCanonical: toCanonicalString({
+      name: prompt.name,
+      description: prompt.description ?? null,
+      argumentDescriptions: args.map((arg) => ({ name: arg.name, description: arg.description ?? null })),
+    }),
+  };
+}
 
-  return { schemaHash: sha256(schemaCanonical), promptHash: sha256(promptCanonical) };
+export function computePromptHashes(prompt: Prompt): Hashes {
+  return hashesOf(computePromptCanonical(prompt));
 }
