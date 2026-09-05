@@ -166,3 +166,57 @@ in the README as a third-party measurement, not a `toollock` dataset
 entry. The `no-auth`/`auth-required` bucket names are also renamed to
 `list-open`/`list-env-gated`/`list-auth-required`/`list-timeout` — see
 DECISIONS.md #12 (revised) and #17 for full reasoning.
+
+## 4. Canonicalization against a real `$ref`-bearing schema — PASS, plus a real fork for decision #5
+
+**`$ref` existence, and a correction to where it comes from:** PLAN.md's
+spike description said "find one from a Zod-based server," on the
+assumption that `$ref` would show up via `zod-to-json-schema`'s structural
+sharing. Tested 5 real servers' full `tools/list` output
+(`server-everything`, `@notionhq/notion-mcp-server`, `mcp-server-linear`,
+`@sentry/mcp-server`, `server-sequential-thinking`). None of the
+Zod/SDK-native servers emitted a single `$ref`. `@notionhq/notion-mcp-server`
+did — heavily — but it's OpenAPI-derived (Notion's OpenAPI spec converted
+to JSON Schema), not Zod-based. 152 `$ref` occurrences across its 24
+tools, up to 9 `$defs` entries per tool, one entry (`richTextRequest`)
+referenced up to 51 times within a single tool's schema.
+
+**Cycle detection:** ran a real cycle-detector (DFS, white/gray/black)
+against the `$defs` graph of all 24 tools. **Zero cycles found.** Max
+`$ref` nesting depth observed is 2 (e.g. `blockObjectRequest` →
+`paragraphBlockRequest` → `richTextRequest`, a leaf). Each tool's `$defs`
+dictionary is self-contained — no cross-tool or external reference
+resolution needed, simpler than the plan assumed. Inlining + defensive
+cycle detection (even though this sample never exercised it) is
+confirmed tractable; PLAN.md's "hash `$ref` as opaque" fallback isn't
+needed for this real case.
+
+**Unplanned finding, real fork for DECISIONS.md #5:** while inlining
+Notion's schemas to check for exponential blowup from the 51x-reused
+def, found the opposite problem. Every one of Notion's 24 tools ships
+the *entire* 9-entry `$defs` dictionary regardless of what that specific
+tool's schema actually references — e.g. `API-get-user`'s real schema
+body is 617 characters and references exactly one def
+(`richTextRequest`), but the server sends all 2,509 characters of
+`$defs` anyway. Measured with `gpt-tokenizer` (also confirms spike 5's
+sync/offline claim in passing) across all 24 tools, comparing raw
+canonical bytes against reachable-only-inlined canonical bytes:
+
+- Every single tool's inlined form is **smaller** than its raw form —
+  never larger, even the tool that reuses `richTextRequest` most
+  heavily (`API-update-page-markdown`, ratio 0.57).
+- Totals across all 24 tools: **17,430 raw tokens vs. 4,882 inlined
+  tokens** — inlined is 28% of raw. The extreme case
+  (`API-get-self`) inlines to 7% of its raw size.
+
+DECISIONS.md #5 currently specifies tokenizing "the same bytes being
+hashed" — i.e. the post-inline, canonical, dead-`$defs`-eliminated form.
+But a real MCP client receives the **raw** wire response, `$defs`
+padding included, and that's what actually loads into a model's context.
+For a server shaped like this one, token-counting the canonical basis
+would report roughly a **quarter** of the real wire-level cost — a
+large, systematic understatement, not noise, for the exact command
+(`toollock budget`) whose entire pitch is making token cost visible.
+This is unresolved here — it changes what spike 5 ("fix the exact
+tokenized string") is actually supposed to fix, so it's flagged before
+running spike 5 rather than after.

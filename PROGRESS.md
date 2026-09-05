@@ -46,6 +46,18 @@ repo is not yet a git repository — that happens in Phase 1. Phase 0
     verified. Flagged in case a stronger primary citation surfaces later
     — not blocking, since the README already attributes it as a
     third-party number, not a `toollock` measurement.
+- **New from Phase 0 spike 4, unresolved, blocks how spike 5 is run:**
+  measured real `$ref`/`$defs` usage (`@notionhq/notion-mcp-server`) and
+  found every tool ships its entire `$defs` dictionary regardless of what
+  that tool's schema actually references. Across its 24 real tools, raw
+  (wire) token counts total 17,430 vs. 4,882 for the post-inline
+  canonical form DECISIONS.md #5 currently specifies tokenizing — inlined
+  is 28% of raw. Whether `toollock` should token-count raw wire bytes
+  (matches what a real MCP client's context window actually pays) or
+  canonical/hashed bytes (consistent with `schemaHash`, but can
+  materially understate real cost for servers shaped like this) is an
+  open call for decision #5 before Phase 2/4 build `budget` around either
+  answer. See `docs/spikes/phase-0.md` spike 4.
 
 ## Do not retry
 

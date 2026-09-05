@@ -94,6 +94,11 @@ before committing later phases to a design:
 4. Canonicalization against a real `$ref`-bearing schema (find one from a
    Zod-based server) — confirms inlining + cycle detection is tractable,
    or forces a scope-down (hash `$ref` as an opaque structural marker).
+   (Spike 4 found the real example is OpenAPI-derived, not Zod-based —
+   see `docs/spikes/phase-0.md`. Inlining/cycle-detection confirmed
+   tractable, but the same data forced an open question for decision #5:
+   whether token counting should use raw wire bytes or post-inline
+   canonical bytes — they diverge by ~3.6x on the real example found.)
 5. Token-count determinism: confirm `gpt-tokenizer` o200k is synchronous/
    offline, and fix the exact tokenized string — JCS-canonical bytes of
    `{name, description, inputSchema}`, not a fresh `JSON.stringify`, so
