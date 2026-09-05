@@ -63,6 +63,18 @@ Phase log below for how each phase concluded.
   `canonicalize` added as runtime dependencies (caret ranges — no
   documented reproducibility risk analogous to decision #15's SDK pin
   was found for either).
+  A gap caught on review, after this phase's own commits: the in-memory
+  determinism test proves the canonicalizer is a pure function of an
+  object already in memory, not that two real spawns of the same server
+  produce that same object — which is what `verify` (Phase 3) actually
+  depends on. Closed by `scripts/check-hash-determinism.ts` (commit
+  `0abb476`, kept out of `npm test` since it spawns real processes): two
+  independent spawns each of `server-everything` (first-party) and
+  `context7-mcp` (third-party), full pipeline, every tool/prompt hash
+  compared — both PASS, no drift found. `npm run check:hash-determinism
+  [pkg ...]` re-runs it against any package; worth another pass against
+  `@notionhq/notion-mcp-server` before Phase 2.5, given its schema is the
+  most structurally complex one measured so far.
 
 ## Open threads
 
