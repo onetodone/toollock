@@ -7,11 +7,10 @@ Planning complete, including a correction pass after review: cadence
 (previously undefined), and lock-schema version fields (`observedVersion`
 replacing a "pinned version" that would have made drift undetectable) are
 now specified in PLAN.md/DECISIONS.md. No code has been written yet —
-that starts in Phase 1. Phase 0 (spikes, 7 items) is in progress: 5 of 7
-done (stdio hygiene, capability gating, auth-bucket probing, `$ref`
-canonicalization, token-count determinism); spikes 6 (GitHub Actions
-bot-commit mechanics) and 7 (version introspection) remain. See
-`docs/spikes/phase-0.md` for full spike notes.
+that starts in Phase 1. Phase 0 (spikes, 7 items): 7 of 7 have a
+documented outcome, though spike 6 has one loose end (see below) before
+its throwaway workflows get deleted. See `docs/spikes/phase-0.md` for
+full spike notes.
 
 ## Phase log
 
@@ -25,10 +24,10 @@ bot-commit mechanics) and 7 (version introspection) remain. See
   moved past `1.30.0`.
 - `cost-drift` threshold (DECISIONS.md #16) is a stub default, pending
   real data from Phase 5.
-- Whether `observedVersion` (the npm version `npx` actually resolved) is
-  obtainable at all is unresolved — Phase 0 spike 7. If it isn't,
-  `tools.lock` drops that field and `serverInfo.version` is the only
-  version data recorded.
+- `observedVersion` is confirmed obtainable (Phase 0 spike 7): read
+  `version` from the npx cache's `package.json` after spawn, found by
+  globbing on the known package name. No fallback needed; DECISIONS.md
+  #6 updated to state the mechanism directly instead of conditionally.
 - Phase 0 spike 3's two forks are resolved (DECISIONS.md #12 revised,
   #17 added; PLAN.md updated throughout): `sentry-mcp-server` replaces
   `github-mcp-server` as the headline `list-env-gated` promotion example;
@@ -64,6 +63,21 @@ bot-commit mechanics) and 7 (version introspection) remain. See
   has to independently tee the child process's raw stdout for the
   `tools/list` line, not just call `listTools()` — see PLAN.md's Phase 1
   deliverables and DECISIONS.md #5's exact-boundary note.
+- **Spike 6, one item still open:** bot-commit identity, scoped diff,
+  `permissions: contents: write` overriding the repo's read-only default,
+  branch-protection status (none configured on `main`), and non-cross-
+  triggering of other `on: push` workflows are all confirmed against the
+  real repo (`onetodone/toollock`) via a `workflow_dispatch` run of a
+  throwaway `spike6-collector-test.yml`. Not yet observed: whether the
+  same workflow's `schedule: '*/15 * * * *'` trigger actually fires on
+  its own — checked ~4 minutes after setup, before the first boundary
+  passed; the plan itself expected this could take hours on a new
+  workflow. Not blocking anything (the job `workflow_dispatch` ran is
+  identical to what `schedule` would run), but the throwaway workflows
+  (`spike6-collector-test.yml`, `spike6-push-listener-test.yml`) and the
+  test commit they produced (`data/spike6-test/`) are still live in the
+  repo pending that observation, and need deleting/reverting once
+  resolved either way.
 
 ## Do not retry
 

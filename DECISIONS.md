@@ -214,8 +214,15 @@ Instead:
 - `serverInfo.version` — self-reported by the server in its `initialize`
   response. Free to capture, unverifiable.
 - `observedVersion` — the npm package version `npx` actually resolved for
-  that run, if Phase 0 spike 7 confirms this is obtainable; otherwise
-  omitted and the gap is documented rather than faked.
+  that run. Confirmed cheaply obtainable in Phase 0 spike 7: after
+  `npx -y <pkg>` completes, npm has already written the resolved
+  package's real `package.json` to `<npm cache>/_npx/<hash>/
+  node_modules/<pkg>/package.json` — `capture.ts` globs for that path by
+  the package name it already knows it spawned (no hash prediction, no
+  extra network call) and reads `version` directly. `null` only when the
+  glob finds nothing at all (the package failed to resolve/install),
+  distinct from a server that installs fine but fails at the
+  MCP-protocol level.
 
 **Alternatives rejected:**
 

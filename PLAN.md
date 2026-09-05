@@ -64,10 +64,12 @@ Unverified — explicitly a Phase 0 spike, not assumed:
 - Real-world stdio hygiene (clean stdout, clean exit) of candidate seed
   servers — the SDK's contract is clear, third-party packages don't
   always honor it.
-- Whether the actual npm version that `npx -y <pkg>` resolved for a given
-  spawn is obtainable at all (e.g. via a pre-resolution `npm view <pkg>
-version` call, or inspecting the npx cache) — needed to populate
-  `tools.lock`'s `observedVersion` field (see Phase 3, DECISIONS.md #6).
+- ~~Whether the actual npm version that `npx -y <pkg>` resolved for a
+  given spawn is obtainable at all~~ Resolved in Phase 0 spike 7: yes,
+  cheaply — read `version` from the resolved package's own
+  `package.json` in the npx cache after the spawn, found by globbing on
+  the known package name rather than a pre-resolution `npm view` query.
+  See DECISIONS.md #6.
 
 ## Phase 0 — Spikes (~1.5 days)
 
@@ -116,7 +118,9 @@ before committing later phases to a design:
    actually resolved is obtainable from (or alongside) the spawn. If not
    cheaply obtainable, decide the fallback (e.g. recording only
    `serverInfo.version` from `initialize`, with a documented gap) before
-   Phase 3 designs the lock schema around it.
+   Phase 3 designs the lock schema around it. (Confirmed obtainable —
+   see `docs/spikes/phase-0.md` and DECISIONS.md #6; the fallback wasn't
+   needed.)
 
 **Deliverables:** a short written note per unknown (pass, or the scope-down
 it forces). Throwaway spike scripts only, nothing production.
@@ -362,7 +366,7 @@ canonicalize/hash → lockfile commands, there is no project.
 | Non-determinism in JCS/token counts causes noisy no-op lockfile diffs — undermines the "human-diffable" pitch | Phase 2 fixture explicitly hash-twice-and-byte-compare                                                                                             |
 | Scope creep polishing the security-scanner positioning comparison                                             | Cut-line protects this; one honest paragraph, not a feature matrix                                                                                 |
 | `@modelcontextprotocol/sdk` v2 beta reaches npm `latest` mid-build                                            | Exact version pin in `package.json`, not a caret range                                                                                             |
-| The actual npm-resolved version of an `npx -y <pkg>` spawn turns out not to be cheaply obtainable             | Phase 0 spike 7 checks this before Phase 3 designs the lock schema around it; fallback is `serverInfo.version` only, documented as a known gap     |
+| ~~The actual npm-resolved version of an `npx -y <pkg>` spawn turns out not to be cheaply obtainable~~ — resolved, was obtainable | Phase 0 spike 7 confirmed it before Phase 3 designed the lock schema: read from the npx cache's `package.json` after spawn, no fallback needed     |
 
 ## Considered and deferred
 

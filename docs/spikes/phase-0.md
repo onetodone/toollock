@@ -288,3 +288,79 @@ spawns.
 **Forces:** Phase 1's `capture.ts` cannot get `wireTokens` from
 `Client.listTools()`; it needs its own raw-stdout tee, documented in
 PLAN.md's Phase 1 deliverables and DECISIONS.md #5's exact-boundary note.
+
+## 6. GitHub Actions bot-commit mechanics — PASS on everything checked; one observation still pending
+
+Real repo (`onetodone/toollock`), two throwaway workflows — not the real
+`collect.yml`, that's Phase 2.5, and both are deleted once this spike is
+fully confirmed: `spike6-collector-test.yml` (`schedule: '*/15 * * * *'`
++ `workflow_dispatch`, `permissions: contents: write`, scoped
+`git add data/`, bot identity `github-actions[bot]`) and
+`spike6-push-listener-test.yml` (`on: push`, exists only to test
+cross-triggering).
+
+- **Bot commit mechanics:** triggered via `workflow_dispatch`
+  (`gh workflow run`); run succeeded in 11s. Resulting commit: author
+  *and* committer both `github-actions[bot]
+  <41898282+github-actions[bot]@users.noreply.github.com>` — cleanly
+  separable from human commits via `git log --author`. Diff touched
+  exactly one file under `data/spike6-test/`, nothing else — confirms the
+  scoped `git add data/` (never `-A`) works as designed. The repo's
+  *default* `GITHUB_TOKEN` permission is `read`
+  (`gh api .../actions/permissions/workflow`), but the workflow's own
+  `permissions: contents: write` block correctly overrode it for this
+  job — confirmed empirically, not assumed from docs.
+- **Branch protection:** none configured on `main`
+  (`gh api .../branches/main/protection` → 404 "Branch not protected").
+  So there's currently nothing to block the bot's push — this answers
+  "not applicable yet" rather than "confirmed doesn't block." Flagged:
+  if branch protection is added before Phase 6 ships, this needs
+  re-verification with a real ruleset in place (an explicit bypass
+  allowance for the bot would be required).
+- **Cross-workflow triggering — confirmed empirically, not assumed.**
+  `spike6-push-listener-test.yml` (`on: push`) shows exactly one run in
+  its Actions API history, and its `head_sha` matches the human commit
+  that *added* the workflow files — not the bot's later commit. Checked
+  directly via `gh api repos/.../actions/workflows/.../runs`, not just
+  the summary view. The bot's `GITHUB_TOKEN`-authored push did **not**
+  trigger it. Matches documented GitHub behavior, now independently
+  confirmed against this repo's actual settings rather than taken on
+  faith.
+- **Scheduled trigger's actual first fire:** not yet observed (checked ~4
+  minutes after setup; the first `*/15 * * * *` boundary hadn't passed).
+  Per the plan's own expectation this can be delayed hours on a brand new
+  workflow. Not blocking: the underlying mechanics (identity,
+  permissions, scoping, non-cross-triggering) are already proven via
+  `workflow_dispatch`, which runs the exact same job the schedule trigger
+  would. Checking back later; this note and the throwaway workflows will
+  be updated/removed once resolved either way.
+
+## 7. Version introspection — PASS, cheaply obtainable
+
+Tried and rejected first: `npx --loglevel info` and `--loglevel verbose`
+don't print the resolved version in a parseable line, and npm's own
+debug log doesn't either for a cache-revalidated fetch (checked all
+three directly).
+
+**What works:** after `npx -y <pkg>` completes, the resolved package sits
+on disk at `<npm cache>/_npx/<hash>/node_modules/<pkg>/package.json`,
+written by npm during install — before the server process itself ever
+runs, so it's present even for a server that fails at the application/
+auth level after a successful install. The hash directory name doesn't
+need to be predicted: `capture.ts` already knows the exact package name
+it just spawned, so it globs
+`_npx/*/node_modules/<pkg>/package.json` directly rather than computing
+npm's internal hash. Confirmed on a real spawn
+(`@sentry/mcp-server`, placeholder-promoted): exactly one match,
+`observedVersion: "0.39.0"` — in this case matching `serverInfo.version`
+reported at `initialize`, though the two won't always coincide (they
+measure different things, per decision #6). Cost: one
+`npm config get cache` call (handles a non-default cache location) plus
+a glob and a file read — no extra network round-trip beyond the spawn
+that was happening anyway.
+
+**Forces:** none. `tools.lock`'s `observedVersion` field (decision #6) is
+implementable as originally scoped, using the npx-cache-glob method
+rather than a pre-spawn `npm view` query. Zero glob matches (the package
+failed to resolve/install at all) is the only null case, distinct from a
+server that installs fine but fails at the MCP-protocol level.
