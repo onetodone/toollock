@@ -28,10 +28,12 @@ test("fetchAllRegistryEntries: follows nextCursor across pages, stops when absen
     return jsonResponse(pages[call++]);
   }) as typeof fetch;
 
-  const entries = await fetchAllRegistryEntries(fakeFetch);
-  assert.equal(entries.length, 3);
+  const result = await fetchAllRegistryEntries(fakeFetch);
+  assert.equal(result.entries.length, 3);
+  assert.equal(result.pages, 3);
+  assert.equal(result.cappedByMaxPages, false);
   assert.deepEqual(
-    entries.map((e) => e.server.name),
+    result.entries.map((e) => e.server.name),
     ["a", "b", "c"],
   );
   assert.equal(call, 3);
@@ -42,6 +44,33 @@ test("fetchAllRegistryEntries: throws on a non-ok response", async () => {
   await assert.rejects(() => fetchAllRegistryEntries(fakeFetch));
 });
 
+test("fetchAllRegistryEntries: a repeating cursor throws instead of looping forever or double-counting", async () => {
+  // Page 1 advances normally; page 2's nextCursor repeats page 1's own
+  // nextCursor — an overlapping/non-advancing window, not a large registry.
+  const fakeFetch = (async (url: string) => {
+    const cursor = new URL(url).searchParams.get("cursor");
+    if (cursor === null) return jsonResponse({ servers: [record({ name: "a" })], metadata: { nextCursor: "x:1.0.0" } });
+    return jsonResponse({ servers: [record({ name: "b" })], metadata: { nextCursor: "x:1.0.0" } });
+  }) as unknown as typeof fetch;
+
+  await assert.rejects(() => fetchAllRegistryEntries(fakeFetch), /did not advance/);
+});
+
+test("fetchAllRegistryEntries: maxPages stops an unbounded feed and reports it was capped", async () => {
+  let call = 0;
+  const fakeFetch = (async () => {
+    call++;
+    // Always returns a fresh, ever-advancing cursor — a genuinely
+    // unbounded (or just very large) feed, exactly what the cap exists for.
+    return jsonResponse({ servers: [record({ name: `n${call}` })], metadata: { nextCursor: `n${call}:1.0.0` } });
+  }) as unknown as typeof fetch;
+
+  const result = await fetchAllRegistryEntries(fakeFetch, { maxPages: 5 });
+  assert.equal(result.pages, 5);
+  assert.equal(result.cappedByMaxPages, true);
+  assert.equal(result.entries.length, 5);
+});
+
 test("isLatest: strict === true, a missing or false flag is not latest", () => {
   assert.equal(isLatest(record({ isLatest: true })), true);
   assert.equal(isLatest(record({ isLatest: false })), false);
@@ -50,9 +79,10 @@ test("isLatest: strict === true, a missing or false flag is not latest", () => {
 
 test("summarizeRegistry: counts only latest entries, extracts npm candidates by packages[].identifier not server.name", () => {
   const entries: RegistryRecord[] = [
-    record({ name: "x", isLatest: false, packages: [{ registryType: "npm", identifier: "old-x" }] }),
+    record({ name: "x", version: "0.9.0", isLatest: false, packages: [{ registryType: "npm", identifier: "old-x" }] }),
     record({
       name: "x",
+      version: "1.0.0",
       isLatest: true,
       packages: [{ registryType: "npm", identifier: "@scope/x" }],
       repository: { url: "https://github.com/scope/x" },
@@ -65,7 +95,9 @@ test("summarizeRegistry: counts only latest entries, extracts npm candidates by 
   const { tally, npmCandidates } = summarizeRegistry(entries);
 
   assert.equal(tally.totalEntries, 5);
+  assert.equal(tally.distinctEntryKeys, 5);
   assert.equal(tally.latestEntries, 4);
+  assert.equal(tally.distinctLatestNames, 4);
   assert.deepEqual(tally.byRegistryType, { npm: 1, pypi: 1 });
   assert.equal(tally.remoteOnlyEntries, 1);
   assert.equal(tally.neitherPackagesNorRemotes, 1);
@@ -90,4 +122,21 @@ test("summarizeRegistry: a server with two package registryTypes is counted once
   const { tally, npmCandidates } = summarizeRegistry(entries);
   assert.deepEqual(tally.byRegistryType, { npm: 1, oci: 1 });
   assert.equal(npmCandidates.length, 1);
+});
+
+test("summarizeRegistry: duplicate raw entries (same name@version twice) surface as distinctEntryKeys < totalEntries", () => {
+  const entries: RegistryRecord[] = [record({ name: "dup", version: "1.0.0" }), record({ name: "dup", version: "1.0.0" })];
+  const { tally } = summarizeRegistry(entries);
+  assert.equal(tally.totalEntries, 2);
+  assert.equal(tally.distinctEntryKeys, 1, "an overlapping-page duplicate must not inflate the distinct count");
+});
+
+test("summarizeRegistry: two entries both flagged isLatest for the same name surface as distinctLatestNames < latestEntries", () => {
+  const entries: RegistryRecord[] = [
+    record({ name: "dup", version: "1.0.0", isLatest: true }),
+    record({ name: "dup", version: "1.0.1", isLatest: true }),
+  ];
+  const { tally } = summarizeRegistry(entries);
+  assert.equal(tally.latestEntries, 2);
+  assert.equal(tally.distinctLatestNames, 1, "two entries claiming to be the latest version of the same server is a data bug, not two servers");
 });

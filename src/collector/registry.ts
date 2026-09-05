@@ -33,19 +33,57 @@ interface RegistryPage {
   metadata?: { nextCursor?: string; count?: number };
 }
 
+export interface PageInfo {
+  page: number;
+  entriesSoFar: number;
+  cursor: string | undefined;
+  nextCursor: string | undefined;
+}
+
+export interface FetchRegistryOptions {
+  onPage?: (info: PageInfo) => void;
+  /**
+   * Hard stop so an unattended run terminates instead of looping forever
+   * against a misbehaving or unbounded feed — this crawl has no operator
+   * watching it once it's wired into anything scheduled. Default (5000
+   * pages = 500,000 entries) is well above the real registry's observed
+   * size (~920 pages) with headroom for real growth.
+   */
+  maxPages?: number;
+}
+
+export interface FetchRegistryResult {
+  entries: RegistryRecord[];
+  pages: number;
+  /** True only if `maxPages` was hit with more data still available — distinct from a clean exhaustion of `nextCursor`. */
+  cappedByMaxPages: boolean;
+}
+
 /**
  * Fetches every page of the public MCP registry (`nextCursor` pagination,
  * confirmed live in Phase 0 spike 3). Real network call, no offline
  * fixture substitutes for it — "how many entries does the registry have
  * today" is a dated number that can't be reconstructed later.
+ *
+ * Guards against the two ways a paginated crawl silently lies: a cursor
+ * that repeats (the loop would never terminate, and every page in
+ * between would be counted as if it were new data — a hard failure, not
+ * a warning, since a lower-level `null`-out would let a corrupted count
+ * reach the dataset) and a page count that just keeps climbing
+ * (`maxPages` turns that into a flagged, visible stop instead of an
+ * unattended process running indefinitely).
  */
 export async function fetchAllRegistryEntries(
   fetchImpl: typeof fetch = fetch,
-  onPage?: (pagesSoFar: number, entriesSoFar: number) => void,
-): Promise<RegistryRecord[]> {
+  options: FetchRegistryOptions = {},
+): Promise<FetchRegistryResult> {
+  const maxPages = options.maxPages ?? 5000;
   const all: RegistryRecord[] = [];
+  const seenCursors = new Set<string>();
   let cursor: string | undefined;
   let pages = 0;
+  let cappedByMaxPages = false;
+
   do {
     const url = new URL(REGISTRY_BASE);
     url.searchParams.set("limit", "100");
@@ -57,10 +95,27 @@ export async function fetchAllRegistryEntries(
     const body = (await res.json()) as RegistryPage;
     all.push(...body.servers);
     pages++;
-    onPage?.(pages, all.length);
-    cursor = body.metadata?.nextCursor;
+    const nextCursor = body.metadata?.nextCursor;
+    options.onPage?.({ page: pages, entriesSoFar: all.length, cursor, nextCursor });
+
+    if (nextCursor !== undefined) {
+      if (seenCursors.has(nextCursor)) {
+        throw new Error(
+          `registry pagination did not advance: cursor "${nextCursor}" repeated at page ${pages} — ` +
+            `aborting rather than looping forever or double-counting entries`,
+        );
+      }
+      seenCursors.add(nextCursor);
+    }
+    cursor = nextCursor;
+
+    if (cursor && pages >= maxPages) {
+      cappedByMaxPages = true;
+      break;
+    }
   } while (cursor);
-  return all;
+
+  return { entries: all, pages, cappedByMaxPages };
 }
 
 /**
@@ -77,7 +132,21 @@ export function isLatest(record: RegistryRecord): boolean {
 
 export interface RegistryTally {
   totalEntries: number;
+  /**
+   * Distinct `name@version` keys among all entries. If this is less than
+   * `totalEntries`, the crawl returned the same entry more than once —
+   * an overlapping-page pagination bug, not a large registry. Compare
+   * the two rather than trusting `totalEntries` alone.
+   */
+  distinctEntryKeys: number;
   latestEntries: number;
+  /**
+   * Distinct `server.name` values among entries flagged `isLatest`. If
+   * this is less than `latestEntries`, more than one entry claims to be
+   * the latest version of the same server — also a pagination/data bug,
+   * not evidence of a bigger registry.
+   */
+  distinctLatestNames: number;
   /** One count per `packages[].registryType` value seen (npm, pypi, oci, ...), each latest server counted once per distinct type it lists. */
   byRegistryType: Record<string, number>;
   /** Latest servers with `remotes` but no `packages` at all — hosted-only, no npx spawn target. */
@@ -106,7 +175,11 @@ export interface RegistrySummary {
  * least one `packages[].registryType === "npm"` package.
  */
 export function summarizeRegistry(entries: RegistryRecord[]): RegistrySummary {
+  const distinctEntryKeys = new Set(entries.map((e) => `${e.server.name}@${e.server.version}`)).size;
+
   const latest = entries.filter(isLatest);
+  const distinctLatestNames = new Set(latest.map((e) => e.server.name)).size;
+
   const byRegistryType: Record<string, number> = {};
   let remoteOnlyEntries = 0;
   let neitherPackagesNorRemotes = 0;
@@ -137,7 +210,9 @@ export function summarizeRegistry(entries: RegistryRecord[]): RegistrySummary {
   return {
     tally: {
       totalEntries: entries.length,
+      distinctEntryKeys,
       latestEntries: latest.length,
+      distinctLatestNames,
       byRegistryType,
       remoteOnlyEntries,
       neitherPackagesNorRemotes,

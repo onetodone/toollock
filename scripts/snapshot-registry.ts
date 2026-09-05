@@ -13,6 +13,14 @@
  * bounded concurrency), not a "getting the cron running" task. Re-run by
  * hand when the registry's scale is worth re-measuring.
  *
+ * Reports both `totalEntries` (raw, as fetched) and `distinctEntryKeys`/
+ * `distinctLatestNames` (deduplicated) — three figures across sessions
+ * (~50k capped, "4,000+" partial, then 64k+ and climbing) didn't
+ * reconcile on first run, exactly the kind of thing an overlapping-page
+ * pagination bug would produce. If the raw and distinct counts diverge,
+ * the distinct count is the real one; the gap itself is logged, not
+ * silently resolved in either direction.
+ *
  * Usage: npx tsx scripts/snapshot-registry.ts
  */
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -22,20 +30,38 @@ import { fetchAllRegistryEntries, summarizeRegistry } from "../src/collector/reg
 
 async function main() {
   console.log("Fetching the full MCP registry (registry.modelcontextprotocol.io/v0/servers)...");
-  const records = await fetchAllRegistryEntries(fetch, (pages, entries) => {
-    if (pages % 20 === 0) console.log(`  ...${pages} pages, ${entries} raw entries so far`);
+  const { entries, pages, cappedByMaxPages } = await fetchAllRegistryEntries(fetch, {
+    onPage: ({ page, entriesSoFar, cursor, nextCursor }) => {
+      if (page === 1 || page % 20 === 0) {
+        console.log(`  page ${page}: ${entriesSoFar} raw entries so far, cursor ${cursor ?? "(none)"} -> ${nextCursor ?? "(done)"}`);
+      }
+    },
   });
-  console.log(`Fetched ${records.length} raw entries.`);
+  if (cappedByMaxPages) {
+    console.warn(`WARNING: crawl stopped at the ${pages}-page cap with more data still available — not a complete crawl.`);
+  }
+  console.log(`Fetched ${entries.length} raw entries across ${pages} pages.`);
 
-  const { tally, npmCandidates } = summarizeRegistry(records);
-  console.log(`Latest servers: ${tally.latestEntries}. By registryType: ${JSON.stringify(tally.byRegistryType)}.`);
+  const { tally, npmCandidates } = summarizeRegistry(entries);
+  console.log(`Distinct entries (name@version): ${tally.distinctEntryKeys} (raw was ${tally.totalEntries}).`);
+  if (tally.distinctEntryKeys !== tally.totalEntries) {
+    console.warn(
+      `WARNING: raw entry count and distinct entry count diverge by ${tally.totalEntries - tally.distinctEntryKeys} — ` +
+        `pagination likely returned overlapping pages. Treat distinctEntryKeys as the real number.`,
+    );
+  }
+  console.log(`Latest servers: ${tally.latestEntries} (distinct names: ${tally.distinctLatestNames}).`);
+  if (tally.distinctLatestNames !== tally.latestEntries) {
+    console.warn(
+      `WARNING: ${tally.latestEntries - tally.distinctLatestNames} server name(s) have more than one entry flagged isLatest — a data bug, not extra servers.`,
+    );
+  }
+  console.log(`By registryType: ${JSON.stringify(tally.byRegistryType)}.`);
   console.log(`npm candidates: ${npmCandidates.length}.`);
 
   console.log(`Checking DECISIONS.md #17's curation bar against ${npmCandidates.length} npm candidates (bounded concurrency)...`);
-  let done = 0;
   const criteriaResults = await checkAllNpmCriteria(npmCandidates, 20);
-  done = criteriaResults.length;
-  console.log(`Checked ${done} candidates.`);
+  console.log(`Checked ${criteriaResults.length} candidates.`);
   const curation = summarizeCuration(criteriaResults);
   console.log(
     `Curation: ${curation.survivors.length} survive of ${curation.totalCandidates} ` +
@@ -51,6 +77,8 @@ async function main() {
     date,
     capturedAt: new Date().toISOString(),
     source: "https://registry.modelcontextprotocol.io/v0/servers",
+    pages,
+    cappedByMaxPages,
     tally,
     curation: {
       totalNpmCandidates: curation.totalCandidates,
