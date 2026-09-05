@@ -289,7 +289,7 @@ spawns.
 `Client.listTools()`; it needs its own raw-stdout tee, documented in
 PLAN.md's Phase 1 deliverables and DECISIONS.md #5's exact-boundary note.
 
-## 6. GitHub Actions bot-commit mechanics — PASS on everything checked; one observation still pending
+## 6. GitHub Actions bot-commit mechanics — PASS: mechanics confirmed via `workflow_dispatch`
 
 Real repo (`onetodone/toollock`), two throwaway workflows — not the real
 `collect.yml`, that's Phase 2.5, and both are deleted once this spike is
@@ -326,20 +326,30 @@ cross-triggering).
   trigger it. Matches documented GitHub behavior, now independently
   confirmed against this repo's actual settings rather than taken on
   faith.
-- **Scheduled trigger's actual first fire:** polled every 3 minutes for
-  ~39 minutes (13 checks, `gh run list -e schedule`); zero scheduled runs
-  landed in that window despite a `*/15 * * * *` cron that should have
-  crossed two boundaries. Matches the plan's own expectation that a new
-  workflow's first scheduled run can be delayed well past its nominal
-  interval — now observed directly rather than assumed, though the
-  actual delay length stays unmeasured (didn't wait hours to find the
-  upper bound; not worth holding a live test cron open in the real repo
-  that long). Not blocking: `workflow_dispatch` already exercises the
-  identical job, so every mechanic Phase 2.5's real `collect.yml` depends
-  on (identity, permissions, scoped diff, non-cross-triggering) is
-  proven regardless of when GitHub gets around to the first scheduled
-  tick. Throwaway workflows and the test commit removed after this
-  finding was recorded — see the cleanup commit.
+- **Scheduled trigger's actual first fire — deliberately not chased.**
+  Polled for ~39 minutes and saw nothing, but stopped rather than
+  continuing to wait: a scheduled-trigger delay on a brand new workflow
+  is documented GitHub behavior unrelated to anything in this repo's
+  configuration, and a 39-minute (or even several-hour) poll only tells
+  you whether that particular day was lucky — it isn't evidence about
+  the mechanism itself. `workflow_dispatch` already ran the identical
+  job, so every mechanic that was actually *configurable* here (identity,
+  permissions override, scoped diff, non-cross-triggering) is proven.
+  Whether the cron fires unattended is answered in **Phase 2.5, against
+  the real collector** — not by a throwaway workflow standing in for it.
+  Throwaway workflows and the test commit are removed; see the cleanup
+  commit.
+
+  **A related constraint worth carrying into Phase 2.5/6, found while
+  reasoning about this** (not observed here — documented GitHub
+  behavior, recorded in DECISIONS.md #11): GitHub automatically disables
+  a `schedule`-triggered workflow on a public repo after 60 days with no
+  new commits — only commits reset the clock, not issues/PRs/releases —
+  and disabling takes that workflow's `workflow_dispatch` down with it
+  too. Irrelevant during active development, but the dataset's entire
+  value depends on the schedule surviving unattended for the life of the
+  project, especially once Phase 6 flips to weekly cadence and the
+  collector's own commits become the main thing resetting the timer.
 
 ## 7. Version introspection — PASS, cheaply obtainable
 

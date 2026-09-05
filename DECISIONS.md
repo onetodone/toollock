@@ -352,6 +352,21 @@ GitHub Actions runner only, zero secrets in the environment,
 - This constraint is what forced decision #12 below — auth-gated servers
   can't use real credentials under this model, full stop.
 
+**Known constraint, unrelated to this decision but belongs here as an
+operational note:** GitHub automatically disables a `schedule`-triggered
+workflow on a public repo after 60 days with no new commits to the
+repository — only commits reset the clock; issues, PRs, releases, and
+tags don't. Disabling also takes `workflow_dispatch` on that same
+workflow file down with it, so a lapsed collector can't even be
+manually re-triggered without first re-enabling it via the UI/API. Not a
+risk during the active build window (commits are frequent), but the
+dataset's entire value proposition (decision #10) depends on the
+schedule surviving unattended for the life of the project — worth a line
+in the collector's own operational notes (Phase 2.5/6) so a future
+maintainer isn't surprised by a silently-stopped dataset after a quiet
+stretch, particularly once Phase 6 flips to weekly cadence and the
+collector's own commits are the only thing normally resetting the timer.
+
 ## 12. `tools/list` enumeration probe (resolved this session, revised in Phase 0 spike 3)
 
 **Decision:** classify every seed candidate by how `tools/list` — not
