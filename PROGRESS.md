@@ -2,14 +2,16 @@
 
 ## Current state
 
-**Phase 2.5 is complete; Phase 3 is next.** The collector is real and
-armed: `.github/workflows/collect.yml` is pushed to `main` (daily
-06:00 UTC cron + `workflow_dispatch`), `data/seed-list.json` (10
-servers) drives `scripts/run-collector.ts`, and the first
-`data/snapshots/2026-09-05.json` is committed. `src/collector/` also
-has a real, verified full registry crawl (`registry.ts`/`curate.ts`) —
-see the Phase 2.5 log entry for the numbers. `tools.lock` writing
-(`init`/`verify`/`update`) is Phase 3, still not started. See
+**Phase 3 is complete; Phase 4 is next.** `toollock init`/`verify`/
+`update` are real and working end to end: `init` captures a server and
+writes `tools.lock` (sorted keys, deterministic — a no-op re-run is
+byte-identical); `verify` re-captures and classifies drift into
+DECISIONS.md #7's four classes, exiting 1 on schema-breaking/
+prompt-drift and never writing the file; `update` shows the same
+findings and rewrites. Manually smoke-tested against a real package
+(`@modelcontextprotocol/server-memory`) and proven end-to-end against a
+local fixture server in `src/lock/e2e.test.ts`. `budget`/CI-usability
+polish and the classifier's known edge cases are Phase 4. See
 `docs/spikes/phase-0.md` for Phase 0's spike notes and the Phase log
 below for how each phase concluded.
 
@@ -111,6 +113,40 @@ below for how each phase concluded.
   Phase 0's 10 already-probed servers, by design, not by limitation** —
   see DECISIONS.md #18; a later session should not read the small
   number as unfinished work and expand it out of phase.
+  Three documentation-only findings recorded before Phase 3 (commit
+  `53c3471`): the curation bar passes 95% of npm candidates (7,745 of
+  8,186) despite spike 3's visibly noisy long tail — a real result about
+  this ecosystem's metadata, not a bug in the filter (DECISIONS.md #17);
+  the README now states the ~70%-of-the-registry blind spot explicitly
+  rather than leaving a reviewer to compute it; PLAN.md's Phase 5 section
+  now requires its selection method to be named, since 50-60 is ~0.8% of
+  the real 7,745-server survivor pool, not most of it.
+- **Phase 3 (`tools.lock` + `init`/`verify`/`update`) — complete.**
+  2026-09-05. Commits: `f485117` (schema + `observedVersion`), `393666a`
+  (`buildLockedServer`), `95c22eb` (drift classifier), `382ae1e` (fixture
+  server), `fc2a723` (commands + end-to-end test), `9961243` (CLI
+  wiring), `cd09c62` (README), `b3e4fce` (DECISIONS.md #19). Verified by:
+  `npm test` — 80 tests, all passing, including a real spawned-process
+  end-to-end test (`src/lock/e2e.test.ts`) that runs Phase 3's actual
+  Definition of Done against a local fixture server (never npx, no
+  network): `init` → mutate the fixture's description → `verify` exits 1
+  naming `prompt-drift` specifically → `update` shows it and rewrites →
+  re-`verify` is clean — plus the equally load-bearing zero-diff case,
+  checked directly rather than assumed (a no-op re-run of `init`
+  produces a byte-identical `tools.lock`, and `verify` never writes to
+  the file on either a clean or a failing run). Also manually
+  smoke-tested against a real npm package end to end via the built CLI.
+  A real classifier bug found and fixed by that same end-to-end test
+  before it shipped: `promptHash` equality can't drive `prompt-drift`
+  detection, because `promptHash`'s payload includes every property's
+  description — including ones that exist on only one side of a
+  comparison — so a brand-new optional property (schema-additive) was
+  getting double-counted as prompt-drift too, turning a warn-only change
+  into a failing `verify`. Fixed by comparing stored description text
+  directly, only for properties/arguments present on both sides
+  (DECISIONS.md #19); `annotations` aren't tracked in `tools.lock` at
+  all yet, a real remaining gap recorded in Known limitations, not
+  silently left for someone to discover.
 
 ## Open threads
 
