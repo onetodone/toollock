@@ -2,15 +2,16 @@
 
 ## Current state
 
-**Phase 2 is complete; Phase 2.5 is next.** `src/schema/` now has
-canonicalization (`$ref` inlining + cycle detection + required[]/enum[]
-sort + description-splitting), dual hashing (`schemaHash`/`promptHash`
-for both tools and prompts), and token counting (`canonicalTokens`,
-`wireTokens`, `wireBasisTokens`, `frameTokens`, `refCount`,
-`schemaReuseRatio`) — all pure functions over `Tool`/`Prompt` plus the
-raw wire tee, not yet wired into the CLI (`tools.lock` writing is
-Phase 3). See `docs/spikes/phase-0.md` for Phase 0's spike notes and the
-Phase log below for how each phase concluded.
+**Phase 2.5 is complete; Phase 3 is next.** The collector is real and
+armed: `.github/workflows/collect.yml` is pushed to `main` (daily
+06:00 UTC cron + `workflow_dispatch`), `data/seed-list.json` (10
+servers) drives `scripts/run-collector.ts`, and the first
+`data/snapshots/2026-09-05.json` is committed. `src/collector/` also
+has a real, verified full registry crawl (`registry.ts`/`curate.ts`) —
+see the Phase 2.5 log entry for the numbers. `tools.lock` writing
+(`init`/`verify`/`update`) is Phase 3, still not started. See
+`docs/spikes/phase-0.md` for Phase 0's spike notes and the Phase log
+below for how each phase concluded.
 
 ## Phase log
 
@@ -75,6 +76,41 @@ Phase log below for how each phase concluded.
   [pkg ...]` re-runs it against any package; worth another pass against
   `@notionhq/notion-mcp-server` before Phase 2.5, given its schema is the
   most structurally complex one measured so far.
+- **Phase 2.5 (collector bootstrap) — complete.** 2026-09-05. Commits:
+  `4749432`/`8a245c1`/`0b0a623`/`3adbc4e`/`142e68a` (build-out),
+  `57f7529` (crawl verification, see below), `3a604d4` (first server
+  snapshot), `6b6c989` (registry snapshot). Verified by: `npm test` — 47
+  tests, all passing; the notion-mcp-server determinism pass flagged in
+  Phase 2's log run for real (PASS, 24 tools, 0 prompts); `npm run
+  collect` run for real against all 10 seed servers with a clean exit,
+  producing `data/snapshots/2026-09-05.json`; `.github/workflows/
+  collect.yml` pushed to `main` (`git push` succeeded, `5a8db4d..3a604d4`
+  then the follow-up commits) — the cron is armed, though an actual
+  unattended scheduled fire hasn't been observed yet (Phase 0 spike 6
+  deliberately didn't chase this either; a real fire is the thing to
+  check next, not a re-test of the mechanism).
+  A real-scale finding, caught and verified before it reached the
+  dataset: the full registry crawl initially climbed past 64,000 raw
+  entries against an earlier ~50,000-entry partial check and a
+  "4,000+ npm candidates" estimate from that same partial check — three
+  unreconciled figures from one source. Verified rather than trusted:
+  `fetchAllRegistryEntries` now tracks every cursor and throws on a
+  repeat, takes a hard page cap, and `summarizeRegistry` reports
+  distinct counts (`name@version`, and distinct names among `isLatest`
+  entries) alongside the raw ones. The real, verified numbers
+  (`data/registry/2026-09-05.json`): **92,004 raw entries across 921
+  pages, distinctEntryKeys and distinctLatestNames both equal their raw
+  counterparts exactly** — no pagination overlap, a genuinely large
+  registry. **27,231 distinct servers, 8,186 npm-type**, and DECISIONS.md
+  #17's curation bar takes that to **7,745 survivors** (35 fail to
+  resolve, 0 fail recency, 406 fail the repository-link check). This is
+  roughly two orders of magnitude past what Phase 5's "seed list
+  expanded toward 50-60" (PLAN.md) seems to assume — recorded in
+  DECISIONS.md #17/#18 as a finding for whoever scopes Phase 5's actual
+  seed-expansion method, not resolved here. **v1's seed list stays
+  Phase 0's 10 already-probed servers, by design, not by limitation** —
+  see DECISIONS.md #18; a later session should not read the small
+  number as unfinished work and expand it out of phase.
 
 ## Open threads
 
@@ -88,13 +124,21 @@ what's genuinely still unresolved.
   server misclassified as `list-auth-required`) was checked for across
   Phase 0 spike 3's 10 candidates and not observed — stays open for the
   larger Phase 5 seed list, where it hasn't been ruled out.
-- Whether the collector's `schedule` trigger fires reliably unattended is
-  verified in Phase 2.5 against the real collector, not by Phase 0's
-  throwaway workflow (see `docs/spikes/phase-0.md` spike 6). A related
+- `collect.yml` is live and armed (pushed 2026-09-05), but an actual
+  unattended `schedule` fire hasn't been observed yet — the first
+  scheduled run is the thing to check next (`gh run list --workflow
+  collect.yml`), not a re-test of the mechanism, which Phase 0 spike 6
+  already confirmed via `workflow_dispatch` (identity, permissions
+  override, scoped diff, non-cross-triggering all real). A related
   constraint to carry in: GitHub disables a public repo's scheduled
   workflow after 60 days with no new commits (DECISIONS.md #11) — inert
   during active development, but worth a line in Phase 2.5/6's
   operational notes once commit cadence drops to weekly.
+- Phase 5's seed-list expansion needs its own selection method beyond
+  DECISIONS.md #17's curation bar — the real npm-candidate pool is 8,186
+  (7,745 survive curation), not the small number the "50-60 candidates"
+  target seems to have assumed. Not designed here; flagged in
+  DECISIONS.md #17/#18 for whoever scopes Phase 5.
 
 ## Do not retry
 
