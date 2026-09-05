@@ -1,13 +1,13 @@
 # DECISIONS.md — @onetodone/toollock
 
 One entry per decision. Each has a **Decision**, **Alternatives rejected**,
-and **Why**. Fully reasoned, no stub markers remaining: 12, 13, 15, 17, 18.
-Phase 0's spikes substantially rewrote 3, 5, 6, and 11 with real, measured
-content — each still carries at most one narrower `(expand: ...)` note on
-a point the spikes didn't touch. The rest — 1, 2, 4, 7, 8, 9, 10, 14, 16 —
-still carry the stub markers seeded from context gathered before planning
-began; the bullet points under their "Why" sections are starting points,
-not finished reasoning.
+and **Why**. Fully reasoned, no stub markers remaining: 7, 12, 13, 15, 17,
+18, 19. Phase 0's spikes substantially rewrote 3, 5, 6, and 11 with real,
+measured content — each still carries at most one narrower
+`(expand: ...)` note on a point the spikes didn't touch. The rest — 1, 2,
+4, 8, 9, 10, 14, 16 — still carry the stub markers seeded from context
+gathered before planning began; the bullet points under their "Why"
+sections are starting points, not finished reasoning.
 
 ## 1. Stack
 
@@ -304,15 +304,31 @@ planning, see below). Instead:
 - `serverInfo.version` — self-reported by the server in its `initialize`
   response. Free to capture, unverifiable.
 - `observedVersion` — the npm package version `npx` actually resolved for
-  that run. Confirmed cheaply obtainable in Phase 0 spike 7: after
+  that run. Confirmed cheaply obtainable in Phase 0 spike 7 and
+  implemented for real in Phase 3 (`src/lock/observedVersion.ts`): after
   `npx -y <pkg>` completes, npm has already written the resolved
   package's real `package.json` to `<npm cache>/_npx/<hash>/
-  node_modules/<pkg>/package.json` — `capture.ts` globs for that path by
-  the package name it already knows it spawned (no hash prediction, no
-  extra network call) and reads `version` directly. `null` only when the
+  node_modules/<pkg>/package.json` — read directly by globbing that path
+  for the package name already known to have been spawned (no hash
+  prediction, no extra network call), picking the most-recently-written
+  match if more than one hash directory has it. `null` only when the
   glob finds nothing at all (the package failed to resolve/install),
   distinct from a server that installs fine but fails at the
   MCP-protocol level.
+
+**Also stores each tool's `description` and canonicalized `inputSchema`
+(post-inline, `required[]`/`enum[]` sorted — the same bytes `canonicalTokens`
+is computed from) directly, not just its hashes — same for each prompt's
+`description` and `arguments`.** Realized during Phase 3's implementation,
+not the original plan: a hash-only lockfile can't actually be
+"human-diffable in a PR" as this decision already claimed — a PR diff on
+`"schemaHash": "abc" -> "def"` tells a reviewer nothing about *what*
+changed, and `update`'s "diff shown" (decision #8) would have nothing to
+diff against on a later run once the real server has already moved on.
+The hashes stay too, as a fast equality check and for anything that wants
+to compare without parsing structure. This also makes decision #19's
+drift classifier possible: it needs the actual old shape to diff against
+the new one, not just a hash telling it *that* something changed.
 
 **Alternatives rejected:**
 
@@ -358,12 +374,20 @@ planning, see below). Instead:
 
 **Why:**
 
-- (expand: why prompt-drift fails rather than warns — this is the
-  rug-pull surface, so silence is the wrong default)
-- (expand: the exact `cost-drift` threshold — currently a stub, see #16)
+- Prompt-drift fails rather than warns because it's the rug-pull
+  surface: a server rewriting a tool's description is exactly the attack
+  this project exists to catch, so warning-and-continuing would defeat
+  the point. Schema-additive warns because most additive changes are
+  ordinary, healthy evolution (a new optional param) — failing CI on
+  every one of those would train users to ignore `verify`, the same
+  alert-fatigue failure mode a scanner that flags everything falls into.
 - `canonicalTokens`, not `wireTokens`, is the basis (decision #5) — so
   `cost-drift` fires on real structural token growth, not on wire-format
   noise that has nothing to do with `schemaHash`.
+- `cost-drift`'s exact threshold is decision #16's stub, applied as-is in
+  Phase 3's implementation (`COST_DRIFT_TOOL_THRESHOLD`/
+  `COST_DRIFT_BUDGET_THRESHOLD`, `src/lock/diff.ts`) rather than left
+  unimplemented — see decision #19 for the concrete algorithm.
 
 ## 8. Commands
 
@@ -441,6 +465,20 @@ GitHub Actions runner only, zero secrets in the environment,
   when the workflow's whole job is to spawn untrusted third-party code)
 - This constraint is what forced decision #12 below — auth-gated servers
   can't use real credentials under this model, full stop.
+
+**Scope, added in Phase 3: this constraint is the collector's, not
+`toollock`'s CLI in general.** `init`/`verify`/`update` (`src/lock/
+commands.ts`) spawn with the *real* ambient environment
+(`{...process.env}`), not the collector's placeholder-only env — a user
+running `toollock verify` locally against their own configured,
+credentialed server expects it to behave like any other child process
+and inherit their shell's environment; withholding it would silently
+break every auth-gated server a real user actually runs against, for a
+zero-secrets guarantee that only ever needed to apply to the unattended
+dataset workflow. The two code paths intentionally diverge here — see
+`src/collector/snapshot.ts` (placeholder-only) vs `src/lock/commands.ts`
+(ambient environment) if the difference looks like an inconsistency
+rather than a deliberate one.
 
 **Known constraint, unrelated to this decision but belongs here as an
 operational note:** GitHub automatically disables a `schedule`-triggered
@@ -763,6 +801,60 @@ finding in decision #17's correction above. Recording this explicitly in
 PROGRESS.md too, so a later session doesn't read "10 servers" as an
 unfinished seed list and expand it out of phase.
 
+## 19. Drift classifier algorithm (Phase 3)
+
+**Decision:** `src/lock/diff.ts` implements decision #7's four classes as
+a real structural diff, not just a hash-equality check:
+
+- **Text drift** (`prompt-drift`) is computed from the stored
+  `description` text directly — the tool/prompt's own description, plus
+  each property's/argument's description, but **only for properties or
+  arguments present on both sides of the comparison.** Deliberately not
+  driven by `promptHash` equality: `promptHash`'s payload includes every
+  property's description, including ones that exist on only one side, so
+  a brand-new optional property (which necessarily introduces a new
+  description too) would move `promptHash` and get double-counted as
+  prompt-drift on top of its own correct schema-additive finding. Caught
+  by Phase 3's own end-to-end test failing against exactly this case
+  before it shipped — not a hypothetical.
+- **Structural drift** (`schema-breaking`/`schema-additive`) walks
+  `inputSchema.properties` (tools) or `arguments` (prompts), only when
+  `schemaHash` differs: a removed property/argument, a new property/
+  argument (required → breaking, optional → additive), a property's
+  `type` changing, or a `required[]` membership flip (added → breaking,
+  removed → additive) — covering exactly decision #7's named examples.
+  **A `schemaHash` change matching none of these known patterns defaults
+  to `schema-breaking`** rather than passing silently — the same
+  "silence is the wrong default" stance decision #7 already takes for
+  prompt-drift, applied to the classifier's own blind spots. PLAN.md's
+  Phase 4 ("classifier edge cases") owns replacing this default with
+  real handling as cases are found, not this phase.
+- **Cost drift** applies decision #16's stub thresholds literally
+  (`COST_DRIFT_TOOL_THRESHOLD = 0.15`, `COST_DRIFT_BUDGET_THRESHOLD =
+  0.10`): per-tool `canonicalTokens` growth over 15%, or server-wide
+  `contextBudget` growth over 10%.
+
+**Alternatives rejected:**
+
+- Driving all four classes off hash equality alone (`schemaHash`/
+  `promptHash` changed → fire) — cheaper, but can't distinguish
+  `schema-breaking` from `schema-additive` at all (both just move
+  `schemaHash`), which decision #7 requires distinguishing by definition.
+  This is exactly why decision #6 was amended to store full tool/prompt
+  content, not just hashes — the classifier needs the old shape, not
+  just proof that it changed.
+- Silently passing on an unrecognized `schemaHash` change (only report
+  what's explicitly matched) — rejected for the same reason a rug-pulled
+  description can't be allowed to warn-and-continue: an unclassified
+  structural change is exactly the case where staying quiet is most
+  dangerous, so it fails loud by default instead.
+
+**Why:** decision #7 named the four classes and their pass/fail policy
+but didn't specify how to tell them apart from two lockfile snapshots —
+this decision fills that in with the concrete algorithm actually
+shipped, verified against a real spawned fixture server (not just unit
+fixtures) in Phase 3's end-to-end test.
+
 ## Known limitations
 
 - A legitimate upstream server version bump can trigger `prompt-drift`
@@ -789,3 +881,12 @@ unfinished seed list and expand it out of phase.
   avoid elsewhere). **Mitigation:** if a real cyclic schema surfaces
   later, this gets revisited with real data instead of speculative
   handling now; documented in PLAN.md's risk table.
+- `annotations` (tool hints — `readOnlyHint`, `title`, etc.) factor into
+  `promptHash` (decision #4) but aren't stored in `tools.lock` as their
+  own field (`LockedTool` has no `annotations` property). An
+  annotations-only change would move `promptHash` but `verify`'s text
+  diff (decision #19) can't say *what* changed, since it only compares
+  stored `description` fields, not the hash's full payload.
+  **Mitigation:** none yet — a real gap, not a deliberate scope cut like
+  `outputSchema` above; candidate for Phase 4's classifier-edge-case
+  pass once it's worth the schema growth.
