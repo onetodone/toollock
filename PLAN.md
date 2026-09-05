@@ -20,9 +20,22 @@ exists upstream but is **not** npm-latest yet — tracked as a risk below):
   process with `stdio: ['pipe','pipe', stderr ?? 'inherit']` — stdout is
   reserved exclusively for JSON-RPC framing (`src/client/stdio.ts`).
 - `Client.listPrompts()` **throws** if the server didn't declare the
-  `prompts` capability at `initialize` (`assertCapabilityForMethod`,
-  `src/client/index.ts`) — the collector must capability-check before
-  calling it, not rely on try/catch as the primary path.
+  `prompts` capability at `initialize` — but only when the Client is
+  constructed with `enforceStrictCapabilities: true`, which is **not**
+  the default (`assertCapabilityForMethod`, `src/client/index.ts`, gated
+  on `this._options?.enforceStrictCapabilities === true` in
+  `shared/protocol.ts`). Without that flag, `listPrompts()` sends the
+  request over the wire regardless of declared capabilities and surfaces
+  whatever the server returns. Confirmed against `server-memory`
+  (declares no `prompts` capability, Phase 0 spike 2,
+  `docs/spikes/phase-0.md`): default construction round-trips over stdio
+  and relays the server's own `-32601: Method not found`; constructing
+  with `enforceStrictCapabilities: true` throws locally (`Server does not
+  support prompts (required for prompts/list)`) before anything reaches
+  the wire. The collector must construct the Client with
+  `enforceStrictCapabilities: true` explicitly and still capability-check
+  before calling — not rely on a server-returned `-32601` as the primary
+  path, since that was never a guaranteed contract to begin with.
 - `ToolSchema` (`src/types.ts`): `name`, `description?`, `inputSchema`
   (`{type:'object', properties?, required?}` + catchall), **`outputSchema?`**
   (same shape, optional — out of scope for v1, see below), `annotations?`
@@ -94,9 +107,11 @@ confirms the assumption or documents the fallback it forces.
 
 **Deliverables:** npm package scaffold (`package.json` with an exact,
 non-caret SDK version pin — see DECISIONS.md #15); `src/mcp/connect.ts`
-(spawn + capability-checked connect); `src/mcp/capture.ts` (paginated
-`tools/list` + guarded `prompts/list` → raw JSON); `toollock capture
-<server-spec>` CLI stub.
+(spawn + capability-checked connect — Client constructed with
+`enforceStrictCapabilities: true` explicitly, not by relying on a
+server-returned `-32601` for gating, see Phase 0 spike 2); `src/mcp/
+capture.ts` (paginated `tools/list` + guarded `prompts/list` → raw JSON);
+`toollock capture <server-spec>` CLI stub.
 **Definition of done:** `capture` prints valid JSON for a real no-auth
 reference server, and does not throw against a server with no `prompts`
 capability.

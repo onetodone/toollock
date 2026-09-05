@@ -26,6 +26,13 @@ repo is not yet a git repository — that happens in Phase 1. Phase 0
   obtainable at all is unresolved — Phase 0 spike 7. If it isn't,
   `tools.lock` drops that field and `serverInfo.version` is the only
   version data recorded.
+- Phase 0 spike 3, in progress: probing ~10 real candidates for the
+  no-auth/auth-required split must also watch for a false positive
+  introduced by spike 2's finding — `enforceStrictCapabilities: true`
+  gates every method, not just `prompts/list`, so a server with sloppily
+  declared capabilities could throw locally on `tools/list` and get
+  misclassified as `auth-required` when the real cause is unrelated to
+  auth. See `docs/spikes/phase-0.md` spike 2.
 
 ## Do not retry
 
