@@ -308,9 +308,24 @@ candidates (all auto-probed `list-open` servers kept; up to 5
 timeboxed hand-research path, `sentry-mcp-server` first — see
 DECISIONS.md #12); the bucket column, the `list-env-gated` caveat flag,
 and `list-timeout` counts recorded per dataset entry.
+
+**The selection method for those 50–60 must be stated, not implied.**
+Phase 2.5's real crawl found 7,745 npm candidates surviving DECISIONS.md
+#17's curation bar (out of 8,186 npm-type, 27,231 total registry
+entries) — 50–60 is roughly 0.8% of that survivor pool, not most of it as
+the number might suggest read on its own. "The first 60 returned by the
+registry" is not a defensible sampling method at that ratio (registry
+order is not random and not meaningful); a seeded random sample from the
+7,745 survivors is. Whatever method Phase 5 actually uses, name it
+explicitly and record the seed/method alongside the seed list — not
+re-scoped here, but the target number means something different now than
+it did when this line was written, and glossing over the selection method
+would make the seed list look more representative than it is.
+
 **Definition of done:** a scheduled run's commit message shows a real,
 non-placeholder drift count computed against the previous snapshot; the
-seed list documents each server's bucket.
+seed list documents each server's bucket **and the selection method used
+to reach 50–60 from the real survivor pool**.
 **Test:** trigger two consecutive runs (or replay two saved snapshots) and
 confirm the drift count in the resulting commit message matches a hand
 count of changed hashes.

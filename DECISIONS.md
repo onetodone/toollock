@@ -519,7 +519,10 @@ makes.
   at sourcing time; non-npm servers never reach the probe. Instead, the
   npm filter records *how many* registry entries it excludes at filter
   time — that count is a dataset finding in its own right, the same way
-  the bucket distribution is.
+  the bucket distribution is. This filter's real size (npm is ~30% of the
+  registry, per Phase 2.5's crawl — decision #17) outgrew being a
+  filtering-mechanics footnote here; it's now an explicit scope statement
+  in the README, not just implied by this rejected alternative.
 - Collapsing `list-timeout` into `list-auth-required` — rejected, see
   above; Phase 1's per-server timeout+kill exists specifically so this
   bucket's data is trustworthy rather than a symptom of a crashed probe.
@@ -691,6 +694,23 @@ recorded here narrow the field but don't fully rank it). Not resolved
 here — flagged for whoever scopes Phase 5's actual seed-expansion method.
 Exact numbers recorded in `data/registry/2026-09-05.json` and
 PROGRESS.md, not restated here since the registry's size will move.
+
+**Also found, running the bar for real: it barely filters anything —
+that's the finding, not a failed filter.** 7,745 of 8,186 npm candidates
+survive all three criteria — 95%. Spike 3 observed a visibly noisy long
+tail by eye (near-duplicate, single-purpose, low-effort namespaces), but
+none of these three mechanical signals actually catches that kind of
+noise: a one-off wrapper published last week still resolves on npm,
+still passes the 12-month recency check by construction (it's brand new),
+and adding a repository link costs a publisher nothing. The 5% this bar
+does drop (35 unresolvable, 406 missing a repo link, 0 failing recency)
+is real and worth keeping, but it answers "is this minimally
+well-formed," not "is this worth including in a curated dataset" — those
+turned out to be different questions. Recorded here rather than treated
+as a bug in the bar: **metadata-based quality signals don't separate
+signal from noise in this ecosystem.** Phase 5's selection method (see
+below, and PLAN.md's Phase 5 section) needs to account for this rather
+than assume a stronger curation bar would fix it.
 
 ## 18. Dataset file layout, and v1's seed list is 10 servers by design
 
