@@ -1,0 +1,16 @@
+name: spike6-push-listener-test
+
+# THROWAWAY — Phase 0 spike 6 only. Exists solely to check whether a
+# GITHUB_TOKEN-authored bot push (from spike6-collector-test.yml) causes
+# other on:push workflows to fire. Deleted once spike 6 is documented.
+
+on:
+  push:
+
+jobs:
+  record-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record that this ran
+        run: |
+          echo "Listener fired for commit ${{ github.sha }} pushed by ${{ github.actor }}"

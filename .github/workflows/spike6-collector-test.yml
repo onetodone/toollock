@@ -1,0 +1,34 @@
+name: spike6-collector-test
+
+# THROWAWAY — Phase 0 spike 6 only. Proves the bot-commit mechanics
+# (schedule + workflow_dispatch trigger, GITHUB_TOKEN write permission,
+# scoped `git add data/`, distinct bot identity) before Phase 2.5 builds
+# the real collect.yml around them. Deleted once spike 6 is documented.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  no-op-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write a dated no-op snapshot file
+        run: |
+          mkdir -p data/spike6-test
+          date -u +"%Y-%m-%dT%H:%M:%SZ (run ${{ github.run_id }}, event ${{ github.event_name }})" \
+            > "data/spike6-test/$(date -u +%Y%m%dT%H%M%SZ)-${{ github.run_id }}.txt"
+
+      - name: Commit and push as a distinct bot identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "data: spike6 no-op snapshot (event: ${{ github.event_name }})"
+          git push
