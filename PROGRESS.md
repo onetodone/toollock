@@ -2,9 +2,12 @@
 
 ## Current state
 
-**Phase 0 is complete; Phase 1 is next.** No code has been written yet —
-`src/` doesn't exist. See `docs/spikes/phase-0.md` for full spike notes
-and the Phase log below for how Phase 0 concluded.
+**Phase 1 is complete; Phase 2 is next.** `src/mcp/connect.ts` and
+`src/mcp/capture.ts` exist and are tested against two real reference
+servers; `toollock capture <pkg>` runs end to end and prints raw JSON.
+No canonicalization, hashing, or token counting yet — that's Phase 2.
+See `docs/spikes/phase-0.md` for Phase 0's spike notes and the Phase log
+below for how each phase concluded.
 
 ## Phase log
 
@@ -35,10 +38,6 @@ Resolution narrative for each Phase 0 spike lives in
 `docs/spikes/phase-0.md`, not duplicated here — this section is only
 what's genuinely still unresolved.
 
-- SDK exact-version pin (see DECISIONS.md #15) isn't set yet — no
-  `package.json` exists. Set it when Phase 1 scaffolds the package; check
-  `npm view @modelcontextprotocol/sdk dist-tags` at that time in case it's
-  moved past `1.30.0`.
 - `cost-drift` threshold (DECISIONS.md #16) is a stub default, pending
   real data from Phase 5.
 - The `enforceStrictCapabilities` false-positive risk (a sloppily-declared
