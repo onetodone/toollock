@@ -121,6 +121,25 @@ token counts, kept side by side rather than collapsed into one:
   every call; it's the basis for `toollock budget`'s table and for
   `tools.lock`'s `contextBudget` total.
 
+  **Exact source, not `Client.listTools()`'s return value:** Phase 0
+  spike 5 found the SDK Zod-validates every incoming message
+  (`JSONRPCMessageSchema.parse`) before the `Client` ever sees it, and
+  Zod's `.parse()` rebuilds the result object following the SDK's own
+  schema field order — not the server's original key order. Measured on
+  a real server: content-identical (same length) but reordered
+  (`$defs` first in the real wire bytes, last in the SDK-reconstructed
+  object), and the reordering measurably changes the token count (17,500
+  raw vs. 17,476 SDK-reconstructed — a difference caused entirely by
+  which SDK version's schema shape happens to be running, not by
+  anything the target server did). So `wireTokens` is computed from an
+  independent tee of the child process's raw stdout stream, captured in
+  parallel with (not instead of) the normal `Client` call, taking the
+  untouched line whose parsed shape is `{result: {tools: [...]}}` and
+  re-serializing `JSON.parse(rawLine).result.tools` — the parse-then-
+  immediate-restringify round-trip preserves original key order because
+  no Zod reconstruction happens in between, unlike going through the
+  Client.
+
 A third, derived field travels with them: `schemaReuseRatio = wireTokens
 / canonicalTokens`, recorded per server per snapshot in the dataset
 (Phase 2.5/5). A ratio meaningfully above 1 names a specific, fixable

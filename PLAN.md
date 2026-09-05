@@ -139,8 +139,18 @@ warm-cache spike environment) and 15s per `list*` call after that,
 SIGKILL on expiry. Not speculative hardening — spike 3 hit a real hang
 (`@stripe/mcp`, which proxies `tools/list` to a live authenticated
 endpoint and never completes `initialize` on a bad key). `src/mcp/
-capture.ts` (paginated `tools/list` + guarded `prompts/list` → raw JSON);
-`toollock capture <server-spec>` CLI stub.
+capture.ts` (paginated `tools/list` + guarded `prompts/list` → raw JSON) —
+capture must independently tee the child process's raw stdout stream for
+the `tools/list` response line, in parallel with (not instead of) the
+SDK's own `Client.listTools()` call, and extract `result.tools` from that
+untouched raw text. `Client.listTools()`'s return value is **not** a
+valid source for `wireTokens`: every incoming message is Zod-validated
+before the Client ever sees it, and Zod's `.parse()` rebuilds the object
+following the SDK's own schema field order, not the server's original
+key order — confirmed on a real server (Phase 0 spike 5) to change the
+token count (17,500 raw vs. 17,476 SDK-reconstructed) for reasons that
+have nothing to do with the target server. `toollock capture
+<server-spec>` CLI stub.
 **Definition of done:** `capture` prints valid JSON for a real no-auth
 reference server, and does not throw against a server with no `prompts`
 capability.

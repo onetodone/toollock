@@ -6,9 +6,12 @@ Planning complete, including a correction pass after review: cadence
 (daily during build, weekly only from Phase 6), prompt-schema hashing
 (previously undefined), and lock-schema version fields (`observedVersion`
 replacing a "pinned version" that would have made drift undetectable) are
-now specified in PLAN.md/DECISIONS.md. No code has been written and the
-repo is not yet a git repository — that happens in Phase 1. Phase 0
-(spikes, now 7 items) is next.
+now specified in PLAN.md/DECISIONS.md. No code has been written yet —
+that starts in Phase 1. Phase 0 (spikes, 7 items) is in progress: 5 of 7
+done (stdio hygiene, capability gating, auth-bucket probing, `$ref`
+canonicalization, token-count determinism); spikes 6 (GitHub Actions
+bot-commit mechanics) and 7 (version introspection) remain. See
+`docs/spikes/phase-0.md` for full spike notes.
 
 ## Phase log
 
@@ -51,9 +54,16 @@ repo is not yet a git repository — that happens in Phase 1. Phase 0
   `wireTokens` (raw `tools/list` array, `budget`/`contextBudget` basis)
   are kept, plus a derived `schemaReuseRatio` recorded per server per
   snapshot. `$ref` appearing only in the OpenAPI-derived server tested,
-  never the Zod/SDK-native ones, is now a line in DECISIONS.md #3. Spike
-  5 (running next) has two fixed serializations to confirm determinism
-  for instead of one.
+  never the Zod/SDK-native ones, is now a line in DECISIONS.md #3.
+- Phase 0 spike 5 done: both fixed strings confirmed deterministic across
+  independent process spawns. Found and closed a real reproducibility
+  hazard along the way — `Client.listTools()`'s return value is Zod-
+  reconstructed and doesn't preserve the server's original key order, so
+  `wireTokens` can't be sourced from it (measured a 24-token difference
+  from reordering alone, on a real server). `capture.ts` (Phase 1) now
+  has to independently tee the child process's raw stdout for the
+  `tools/list` line, not just call `listTools()` — see PLAN.md's Phase 1
+  deliverables and DECISIONS.md #5's exact-boundary note.
 
 ## Do not retry
 

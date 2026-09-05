@@ -231,3 +231,60 @@ Notion-shaped servers; wire-only would break the hash/count coupling
 spike 5 exists to guarantee. Full reasoning in DECISIONS.md #5 (revised).
 Also folded in: `$ref` showing up only in the OpenAPI-derived server and
 none of the Zod/SDK-native ones is now a line in DECISIONS.md #3.
+
+## 5. Token-count determinism — PASS, with a real reproducibility hazard found and closed
+
+**`gpt-tokenizer` offline/sync:** confirmed both ways — empirically (used
+synchronously, no `await`, dozens of times across every spike script this
+session, no network involved) and declaratively (`package.json` lists
+zero runtime `dependencies`).
+
+**`canonicalTokens`'s fixed string:** JCS-canonical bytes of `{name,
+description, inputSchema}` after `$ref` inlining (Phase 0 spike 4's
+inliner). Ran the full pipeline twice against two independent process
+spawns of the real Notion server: byte-identical canonical strings
+(sha256-compared), identical per-server total (4,882 tokens) both times.
+
+**`wireTokens`'s fixed string — the real finding.** Naively computing
+this from `Client.listTools()`'s return value seemed reasonable, but
+isn't reproducible: the SDK Zod-validates every incoming JSON-RPC message
+(`JSONRPCMessageSchema.parse`, in `shared/stdio.js`'s `deserializeMessage`)
+*before* the `Client` ever sees it, and Zod's `.parse()` rebuilds the
+result object following the SDK's own internal schema field order — not
+the order the server actually sent. Verified directly: tee'd the child
+process's raw stdout independently of the SDK's own internal listener
+(Node streams support multiple `'data'` listeners on the same stream, so
+this doesn't interfere with normal operation) and compared the literal
+wire bytes against `Client.listTools()`'s re-serialized return value for
+the same response. Both are content-identical (same length, 76,215
+characters) but differently ordered — e.g. `$defs` appears first in the
+real wire bytes, last in the SDK-reconstructed object — and that
+reordering changes the token count: **17,500 tokens (real wire bytes) vs.
+17,476 tokens (SDK-reconstructed)**, a difference caused entirely by
+which SDK version's internal schema shape happens to be running the
+collector, not by anything the target server did. Using
+`Client.listTools()` for `wireTokens` would have made the number silently
+dependent on `toollock`'s own SDK version — exactly the kind of
+unreproducible measurement this spike exists to rule out.
+
+**Fixed instead:** `wireTokens` is computed from an independent tee of
+the raw child-process stdout stream (captured in parallel with, not
+instead of, the normal `Client` call), taking the untouched line whose
+parsed shape is `{result: {tools: [...]}}}` and re-serializing
+`JSON.parse(rawLine).result.tools` directly — parse-then-immediate-
+restringify preserves the server's original key order because no Zod
+reconstruction happens in between. Scope confirmed exactly: the raw line
+was 76,259 characters including the JSON-RPC envelope; the extracted
+`tools` array alone was 76,215 characters — the ~44-byte envelope
+(`{"jsonrpc":"2.0","id":N,"result":{"tools":` plus its closing) is
+excluded, exactly as decided. Full determinism check (two independent
+spawns): byte-identical raw-tee strings (sha256-compared), identical
+token count (17,500) both times.
+
+**`schemaReuseRatio`:** stable given the two fixed strings —
+`17,500 / 4,882 = 3.5846`, identical to 4 decimal places across both
+spawns.
+
+**Forces:** Phase 1's `capture.ts` cannot get `wireTokens` from
+`Client.listTools()`; it needs its own raw-stdout tee, documented in
+PLAN.md's Phase 1 deliverables and DECISIONS.md #5's exact-boundary note.
