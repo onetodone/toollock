@@ -1,10 +1,13 @@
 # DECISIONS.md — @onetodone/toollock
 
 One entry per decision. Each has a **Decision**, **Alternatives rejected**,
-and **Why**. Entries 1–11 and 14–16 are stubs seeded from context already
-gathered — the bullet points under "Why" are starting points, not finished
-reasoning; expand them. Entries 12 and 13 were actually reasoned through
-during planning, so they carry real content rather than stubs.
+and **Why**. Fully reasoned, no stub markers remaining: 12, 13, 15, 17.
+Phase 0's spikes substantially rewrote 3, 5, 6, and 11 with real, measured
+content — each still carries at most one narrower `(expand: ...)` note on
+a point the spikes didn't touch. The rest — 1, 2, 4, 7, 8, 9, 10, 14, 16 —
+still carry the stub markers seeded from context gathered before planning
+began; the bullet points under their "Why" sections are starting points,
+not finished reasoning.
 
 ## 1. Stack
 
@@ -111,15 +114,35 @@ token counts, kept side by side rather than collapsed into one:
   computed from — deterministic, and the basis for `cost-drift`
   (decision #7): a change here means the structurally-hashed content
   actually changed.
-- `wireTokens` — tokenizes the raw `tools/list` JSON-RPC response's
-  `tools` array *before* any normalization: no `$ref` inlining, no
-  `required[]`/`enum[]` sort, no JCS. Scope is exact, for
-  reproducibility: the `tools` array's own JSON only, **never** the
-  surrounding JSON-RPC envelope (`jsonrpc`, `id`, the `result` wrapper) —
-  a client never loads RPC framing into its context window, only the
-  array's contents. This is what a real MCP client actually pays for on
-  every call; it's the basis for `toollock budget`'s table and for
-  `tools.lock`'s `contextBudget` total.
+- `wireTokens` — tokenizes each tool's own raw JSON *before* any
+  normalization: no `$ref` inlining, no `required[]`/`enum[]` sort, no
+  JCS, original key order preserved. **Granularity matches
+  `canonicalTokens`: per tool, not per response.** Each array element is
+  tokenized on its own — the same unit `canonicalTokens` uses — so a
+  per-server `wireTokens` total is the sum across tools, directly
+  comparable to the sum of `canonicalTokens` for the same tools. Scope is
+  exact, for reproducibility: each tool's own JSON only, **never** the
+  surrounding JSON-RPC envelope (`jsonrpc`, `id`, the `result` wrapper,
+  or the array's own brackets/commas) — a client never loads RPC framing
+  into its context window, only the array's contents.
+
+  **`frameTokens`, tracked separately, not folded into either base:** a
+  real client loads the *whole* `tools` array as one JSON value, and
+  tokenizing that one string isn't exactly equal to summing each
+  element's independently-tokenized count — array punctuation
+  (brackets, inter-element commas) plus ordinary BPE boundary effects at
+  each element's edges add a small amount that only exists at the
+  whole-array level. Measured on the real 24-tool server: whole-array
+  `wireTokens` is 17,500; the sum of per-tool `wireTokens` is 17,498;
+  `frameTokens = 2`. `frameTokens` is computed once per server (whole-
+  array total minus the per-tool sum) and added into `contextBudget` —
+  the one number meant to equal what a client actually pays — but it is
+  **excluded** from `schemaReuseRatio` and from any per-tool comparison,
+  so the ratio measures the server's own `$defs`/schema shape, not
+  tokenizer arithmetic. `tools.lock`'s `contextBudget` is therefore
+  `sum(wireTokens) + frameTokens`, which is what a real MCP client
+  actually pays for on every call; the per-tool `wireTokens` values feed
+  `toollock budget`'s table.
 
   **Exact source, not `Client.listTools()`'s return value:** Phase 0
   spike 5 found the SDK Zod-validates every incoming message
@@ -152,15 +175,18 @@ token counts, kept side by side rather than collapsed into one:
   missing measurement is recoverable; a wrong one in a published dataset
   isn't.
 
-A third, derived field travels with them: `schemaReuseRatio = wireTokens
-/ canonicalTokens`, recorded per server per snapshot in the dataset
-(Phase 2.5/5). A ratio meaningfully above 1 names a specific, fixable
-inefficiency in that specific server — e.g. `@notionhq/notion-mcp-server`
-measured at ~3.6x in Phase 0 spike 4, because it ships its entire
-`$defs` dictionary to every tool regardless of what that tool's own
-schema actually references. This is a measurement of the *server*, not
-of `toollock` itself — recorded as a dataset field precisely because
-it's evidence, not an artifact of the tool's own choices.
+A third, derived field travels with them: `schemaReuseRatio =
+sum(wireTokens) / sum(canonicalTokens)` — both sums at the same per-tool
+granularity, `frameTokens` excluded from both sides — recorded per
+server per snapshot in the dataset (Phase 2.5/5). A ratio meaningfully
+above 1 names a specific, fixable inefficiency in that specific server —
+e.g. `@notionhq/notion-mcp-server` measured at **3.5842** (17,498 /
+4,882) in Phase 0, because it ships its entire `$defs` dictionary to
+every tool regardless of what that tool's own schema actually
+references. This is a measurement of the *server*, not of `toollock`
+itself — recorded as a dataset field precisely because it's evidence,
+not an artifact of the tool's own choices, and not an artifact of
+mismatched tokenization granularity either.
 
 Absolute numbers are tokenizer-dependent; only relative ratios (between
 servers, or between `wireTokens` and `canonicalTokens` for the same
@@ -172,11 +198,19 @@ server) are claimed as meaningful across implementations.
   breaks offline/CI use).
 - A different encoding (cl100k) or a rough character-count heuristic.
 - `canonicalTokens` only — the original design, before Phase 0 spike 4
-  measured the real gap on `@notionhq/notion-mcp-server`: 17,430 raw
-  tokens vs. 4,882 canonical tokens across its 24 tools. Reporting only
-  the canonical number in `budget` would understate the real wire-level
-  cost by roughly 4x for a server shaped like that one — not noise, for
-  the one command whose entire pitch is honest token cost.
+  measured the real gap on `@notionhq/notion-mcp-server`: 17,498 wire
+  tokens vs. 4,882 canonical tokens across its 24 tools, same per-tool
+  granularity both sides. (Spike 4's first pass at this number, 17,430,
+  used JCS-sorted-but-not-inlined bytes rather than true wire-order
+  bytes — a mislabeled third quantity, not actually `wireTokens`;
+  corrected once spike 5 established the real wire-order string. The
+  true per-tool sum turned out close to spike 5's whole-array figure —
+  17,498 vs. 17,500 — meaning the earlier ~70-token gap was mostly
+  JCS key-reordering, not array framing, which is only 2 tokens.)
+  Reporting only the canonical number in `budget` would still understate
+  the real wire-level cost by roughly 3.6x for a server shaped like that
+  one — not noise, for the one command whose entire pitch is honest
+  token cost.
 - `wireTokens` only — rejected because it breaks the hash/token coupling
   Phase 0 spike 5 exists to fix: an unnormalized number drifts with
   formatting and key-order noise that has no bearing on `schemaHash`,
@@ -203,13 +237,14 @@ server) are claimed as meaningful across implementations.
 
 **Decision:** JSON, sorted keys, human-diffable in a PR. Stores server id,
 transport, both hashes, per-tool token counts — `canonicalTokens` and
-`wireTokens` each (decision #5; `wireTokens` is `null` with a reason
-string when the tee/`Client` cross-check fails, never a best-effort
-guess) — a total `contextBudget` (the `wireTokens` sum, since that's what
-a real client's context window pays; `canonicalTokens` stays coupled to
-the hashes instead, see decision #5), and version information — but
-**not** a pinned package version (corrected during planning, see below).
-Instead:
+`wireTokens` each, same per-tool granularity (decision #5; `wireTokens`
+is `null` with a reason string when the tee/`Client` cross-check fails,
+never a best-effort guess) — a server-level `frameTokens` (the small
+whole-array-vs-per-tool-sum gap, decision #5), a total `contextBudget`
+(`sum(wireTokens) + frameTokens`, since that's what a real client's
+context window pays; `canonicalTokens` stays coupled to the hashes
+instead, see decision #5), and version information — but **not** a
+pinned package version (corrected during planning, see below). Instead:
 
 - `serverInfo.version` — self-reported by the server in its `initialize`
   response. Free to capture, unverifiable.
@@ -414,10 +449,16 @@ makes.
   no npm package — spike 3, `docs/spikes/phase-0.md`). Rejected: a second
   transport carries a different security profile than the npx-only story
   decision #11's collector security write-up is built on. Recorded in
-  PLAN.md's "Considered and deferred," not silently added. The
-  commonly-cited ~42k-token figure for `github-mcp-server` lives in the
-  README as an attributed third-party measurement instead of a
-  `toollock`-collected dataset entry.
+  PLAN.md's "Considered and deferred," not silently added. A commonly
+  repeated figure puts `github-mcp-server`'s tool definitions at
+  ~42,000 tokens — noted here only as unverified third-party context,
+  **not** in the README: the trail (a getunblocked.com post attributing
+  it to a Nebulagg measurement) dead-ends at a 404'd primary source, so
+  it doesn't meet the bar for a reproducible-measurement project's own
+  front page. The README instead leads with `toollock`'s own
+  byte-reproduced number — `@notionhq/notion-mcp-server` at 17,500 wire
+  tokens across 24 tools (Phase 0 spike 5) — smaller, but ours and
+  independently reproducible.
 - A dedicated `unsupported-transport` bucket for non-npm registry entries
   — unnecessary, since the seed list is filtered to `registryType: npm`
   at sourcing time; non-npm servers never reach the probe. Instead, the
@@ -585,7 +626,14 @@ decision #12's "the count is itself a dataset finding."
   — a server could rug-pull its output contract undetected. **Mitigation:**
   documented explicitly as out of scope (decision #14), not silently
   dropped; a candidate for a later version.
-- `$ref` inlining assumes non-pathological schemas. **Mitigation:** deeply
-  cyclic or externally-referenced schemas fall back to hashing the `$ref`
-  as an opaque structural marker rather than full inlining — a coarser
-  signal than full structural hashing, documented in PLAN.md's risk table.
+- `$ref` inlining assumes non-cyclic schemas. Phase 0 spike 4 tested the
+  one real `$ref`-bearing server found and ran an actual cycle detector
+  against all 24 of its tools: zero cycles, max nesting depth 2. Given
+  that, Phase 2's cycle detector treats a detected cycle as a **hard
+  capture failure** for that tool — loud and specific, not a silent
+  opaque-`$ref`-marker fallback (an earlier idea, dropped: guessing at a
+  structural hash for content we couldn't actually inline is the same
+  mistake `wireTokens`'s null-on-mismatch rule (decision #5) exists to
+  avoid elsewhere). **Mitigation:** if a real cyclic schema surfaces
+  later, this gets revisited with real data instead of speculative
+  handling now; documented in PLAN.md's risk table.

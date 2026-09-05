@@ -52,24 +52,23 @@ required?}[]`. `prompts/list` returns metadata only — rendering the
   reorder array contents, confirming the need for a custom pre-pass to
   sort `required[]`/`enum[]` before JCS serialization.
 
-Unverified — explicitly a Phase 0 spike, not assumed:
+Verified via Phase 0 spikes (not left assumed — all 7 have an outcome in
+`docs/spikes/phase-0.md`):
 
-- Whether `$ref` actually shows up in real-world MCP `inputSchema` output.
-- `github-mcp-server` cannot be tested for placeholder-env promotion via
-  `tools/list` at all: it ships only as an OCI/Docker image
-  (`ghcr.io/github/github-mcp-server`), not an npm package, so `npx -y
-  <pkg>` can't spawn it — independent of auth. Confirmed in Phase 0
-  spike 3 (`docs/spikes/phase-0.md`); DECISIONS.md #12 records the
-  promotion-example substitution this forced.
-- Real-world stdio hygiene (clean stdout, clean exit) of candidate seed
-  servers — the SDK's contract is clear, third-party packages don't
-  always honor it.
+- ~~Whether `$ref` actually shows up in real-world MCP `inputSchema`
+  output.~~ Resolved in spike 4: yes, in an OpenAPI-derived server (not a
+  Zod one, as originally assumed) — zero cycles across the 24 real tools
+  tested. See DECISIONS.md #3.
+- ~~Real-world stdio hygiene (clean stdout, clean exit) of candidate seed
+  servers~~ Resolved in spike 1: clean across all 5 real candidates
+  tested. (Spike 3 later found a real hang under a different condition —
+  `@stripe/mcp` on an invalid placeholder credential — which is why
+  Phase 1's timeout+kill wrapper exists regardless of this result.)
 - ~~Whether the actual npm version that `npx -y <pkg>` resolved for a
-  given spawn is obtainable at all~~ Resolved in Phase 0 spike 7: yes,
-  cheaply — read `version` from the resolved package's own
-  `package.json` in the npx cache after the spawn, found by globbing on
-  the known package name rather than a pre-resolution `npm view` query.
-  See DECISIONS.md #6.
+  given spawn is obtainable at all~~ Resolved in spike 7: yes, cheaply —
+  read `version` from the resolved package's own `package.json` in the
+  npx cache after the spawn, found by globbing on the known package name
+  rather than a pre-resolution `npm view` query. See DECISIONS.md #6.
 
 ## Phase 0 — Spikes (~1.5 days)
 
@@ -171,13 +170,17 @@ prompts, one without).
 
 ## Phase 2 — Canonicalization + dual hashing + token counting (~2 days)
 
-**Deliverables:** `$ref` inlining with cycle detection, `required[]`/
-`enum[]` sort, JCS wrapper, `schemaHash`/`promptHash` (sha256 of the split
-canonical bytes); two token counters — `canonicalTokens` (post-inline JCS
-bytes, hash-coupled) and `wireTokens` (raw `tools/list` `tools` array,
-envelope excluded) — plus the derived `schemaReuseRatio = wireTokens /
-canonicalTokens` per server, all on the fixed serializations from Phase 0
-spike 5 (DECISIONS.md #5).
+**Deliverables:** `$ref` inlining with cycle detection — a detected cycle
+is a hard capture failure for that tool, not a silent fallback
+(DECISIONS.md #3/known limitations) — `required[]`/`enum[]` sort, JCS
+wrapper, `schemaHash`/`promptHash` (sha256 of the split canonical bytes);
+two token counters at matching per-tool granularity — `canonicalTokens`
+(post-inline JCS bytes, hash-coupled) and `wireTokens` (each tool's own
+raw JSON, original key order, envelope and array framing excluded) —
+plus a server-level `frameTokens` (whole-array `wireTokens` minus the
+per-tool sum) and the derived `schemaReuseRatio = sum(wireTokens) /
+sum(canonicalTokens)` (`frameTokens` excluded from the ratio), all on the
+fixed serializations from Phase 0 spike 5 (DECISIONS.md #5).
 
 The `ToolSchema`/`PromptSchema` split is defined explicitly, not left
 implicit:
@@ -359,10 +362,10 @@ canonicalize/hash → lockfile commands, there is no project.
 
 | Risk                                                                                                          | Mitigation                                                                                                                                         |
 | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Real servers misbehave on stdio (stdout logging, hangs) — could double Phase 1/2.5 time                       | Phase 0 spike against real candidates first; swap out any misbehaving server rather than debugging it                                              |
-| `$ref`/cycles more complex than expected                                                                      | Phase 0 spike with a real recursive-schema fixture; fallback is hashing `$ref` as opaque rather than full inlining, documented as a limitation     |
+| A server hangs on stdio, or (new failure mode from the raw-stdout tee, absent from the original risk) logs non-JSON-RPC noise to stdout that the tee would silently mistokenize | Phase 1's per-server timeout+kill (30s connect/15s per list call — spike 3 found a real hang, `@stripe/mcp`) plus the tee/`Client` cross-check that nulls `wireTokens` with a reason on mismatch rather than trusting corrupted tee bytes (spike 5, DECISIONS.md #5) |
+| A schema `$ref` cycle turns up in a server outside Phase 0's tested sample (zero found across the one real `$ref`-bearing server tested, 24 tools) | Phase 2's cycle detector treats a detected cycle as a hard capture failure for that tool, not a silent opaque-marker fallback — consistent with never guessing at a structural hash; revisit if a real cyclic schema surfaces (DECISIONS.md #3/known limitations) |
 | `list-env-gated` promotion research (`sentry-mcp-server` and up to 4 others) takes longer than timeboxed       | Hard timebox per server; a server that doesn't promote in time just stays `list-auth-required` — the bucket count absorbs the overrun, not the schedule |
-| GitHub Actions bot-commit permissions/identity subtleties eat a day                                           | Phase 0 spike with a trivial no-op workflow before Phase 2.5's real collector                                                                      |
+| The collector's `schedule` trigger doesn't fire reliably unattended, or a lapsed workflow silently stops the dataset | Identity, permissions override, scoped diff, and non-cross-triggering all confirmed via `workflow_dispatch` against the real repo (Phase 0 spike 6); the schedule's actual unattended reliability is verified in Phase 2.5 itself, and GitHub's 60-day scheduled-workflow auto-disable on inactivity (DECISIONS.md #11) is documented as an operational constraint to watch once commit cadence drops to weekly |
 | Non-determinism in JCS/token counts causes noisy no-op lockfile diffs — undermines the "human-diffable" pitch | Phase 2 fixture explicitly hash-twice-and-byte-compare                                                                                             |
 | Scope creep polishing the security-scanner positioning comparison                                             | Cut-line protects this; one honest paragraph, not a feature matrix                                                                                 |
 | `@modelcontextprotocol/sdk` v2 beta reaches npm `latest` mid-build                                            | Exact version pin in `package.json`, not a caret range                                                                                             |
@@ -385,6 +388,8 @@ Not in scope for this plan, not silently folded into a phase above:
   different security profile than the npx-only story decision #11's
   collector security write-up is built on, and scope discipline says no
   to a second transport for the sake of one headline example.
-  `github-mcp-server`'s widely-cited ~42k-token figure appears in the
-  README as an attributed third-party measurement instead of a
-  `toollock`-collected one.
+  `github-mcp-server`'s widely-cited ~42k-token figure is noted only as
+  unverified third-party context in DECISIONS.md #12 — its trail
+  dead-ends at a 404'd primary source, so it doesn't appear in the
+  README. The README leads with `toollock`'s own byte-reproduced number
+  instead (Phase 0 spike 5).

@@ -161,9 +161,12 @@ rejected (PLAN.md's "Considered and deferred"); option 3's dedicated
 bucket turned out to be unnecessary — the seed list is npm-filtered at
 sourcing time, so non-npm servers never reach the probe at all, and the
 npm filter instead records how many registry entries it excludes as its
-own dataset finding. The `github-mcp-server` ~42k-token figure is cited
-in the README as a third-party measurement, not a `toollock` dataset
-entry. The `no-auth`/`auth-required` bucket names are also renamed to
+own dataset finding. The `github-mcp-server` ~42k-token figure is noted
+only as unverified third-party context in DECISIONS.md #12 — its trail
+dead-ends at a 404'd primary source, so it isn't in the README; the
+README leads with `toollock`'s own byte-reproduced number instead
+(spike 5: 17,500 wire tokens, `@notionhq/notion-mcp-server`). The
+`no-auth`/`auth-required` bucket names are also renamed to
 `list-open`/`list-env-gated`/`list-auth-required`/`list-timeout` — see
 DECISIONS.md #12 (revised) and #17 for full reasoning.
 
@@ -232,6 +235,25 @@ spike 5 exists to guarantee. Full reasoning in DECISIONS.md #5 (revised).
 Also folded in: `$ref` showing up only in the OpenAPI-derived server and
 none of the Zod/SDK-native ones is now a line in DECISIONS.md #3.
 
+**Correction to this section's own numbers, caught on review:** the
+"17,430 raw tokens" reported above wasn't actually wire bytes — it was
+computed via `canonicalize()` (JCS, **key-sorted**) on the original,
+non-inlined per-tool schema. That's a third quantity, distinct from both
+`wireTokens` and `canonicalTokens`, and it was mislabeled "raw" here.
+Once spike 5 established what `wireTokens` actually has to be (true
+wire-order bytes, via the raw-stdout tee), re-deriving this server's
+numbers at matching per-tool granularity gave **17,498** (sum of each
+tool's own wire-order JSON, tokenized independently) against the same
+**4,882** canonical total — much closer to this section's 17,430 than to
+spike 5's whole-array 17,500, confirming most of the original ~70-token
+gap was JCS key-reordering, not "raw vs. canonical" in any meaningful
+sense. The true array-framing overhead (whole-array tokens minus the
+per-tool sum) is only **2 tokens** — see spike 5's corrected numbers
+below and DECISIONS.md #5's `frameTokens` definition. The `28%`/`~4x`
+figures in this section's prose are superseded by `schemaReuseRatio =
+3.5842` (17,498 / 4,882) — still roughly a 3.6x gap, just measured
+correctly now.
+
 ## 5. Token-count determinism — PASS, with a real reproducibility hazard found and closed
 
 **`gpt-tokenizer` offline/sync:** confirmed both ways — empirically (used
@@ -281,9 +303,23 @@ excluded, exactly as decided. Full determinism check (two independent
 spawns): byte-identical raw-tee strings (sha256-compared), identical
 token count (17,500) both times.
 
-**`schemaReuseRatio`:** stable given the two fixed strings —
-`17,500 / 4,882 = 3.5846`, identical to 4 decimal places across both
-spawns.
+**`schemaReuseRatio`, corrected for granularity (caught on review):** the
+17,500 figure above is the *whole array* tokenized as one string;
+`canonicalTokens` (4,882) is a *sum of 24 per-tool* strings. Dividing one
+by the other mixes granularities — part of the resulting 3.5846 was
+array-level framing, not a property of the server. Re-derived
+`wireTokens` at the same per-tool granularity as `canonicalTokens` (each
+tool's own wire-order JSON, tokenized independently, then summed): sum
+is **17,498** — almost identical to the whole-array 17,500. So the true
+framing overhead (`frameTokens`, DECISIONS.md #5) is just **2 tokens**;
+essentially all of the original ~70-token gap against spike 4's
+mislabeled "17,430" figure was JCS key-reordering, not framing. Corrected
+ratio, matching granularity on both sides:
+`schemaReuseRatio = 17,498 / 4,882 = 3.5842` — stable across both spawns.
+Whole-array `wireTokens` (17,500) remains the right number for
+`contextBudget` (`sum(wireTokens) + frameTokens`, i.e. what a client
+actually loads); the per-tool sum and `canonicalTokens` are what the
+ratio compares.
 
 **Forces:** Phase 1's `capture.ts` cannot get `wireTokens` from
 `Client.listTools()`; it needs its own raw-stdout tee, documented in

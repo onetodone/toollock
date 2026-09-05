@@ -2,26 +2,32 @@
 
 ## Current state
 
-Planning complete, including a correction pass after review: cadence
-(daily during build, weekly only from Phase 6), prompt-schema hashing
-(previously undefined), and lock-schema version fields (`observedVersion`
-replacing a "pinned version" that would have made drift undetectable) are
-now specified in PLAN.md/DECISIONS.md. No code has been written yet —
-that starts in Phase 1. Phase 0 (spikes, 7 items) is complete: all 7 have
-a documented outcome, no open loose ends. See `docs/spikes/phase-0.md`
-for full spike notes.
+**Phase 0 is complete; Phase 1 is next.** No code has been written yet —
+`src/` doesn't exist. See `docs/spikes/phase-0.md` for full spike notes
+and the Phase log below for how Phase 0 concluded.
 
 ## Phase log
 
-- **Phase 0 (spikes) — complete.** All 7 unknowns have a documented
-  outcome in `docs/spikes/phase-0.md`. Two findings forced real changes
-  to the plan rather than just confirming it: token counting splits into
-  two kept-apart bases (`canonicalTokens`/`wireTokens`/`schemaReuseRatio`,
+- **Planning** (pre-Phase 0). A correction pass after review fixed
+  cadence (daily during build, weekly only from Phase 6), prompt-schema
+  hashing (previously undefined), and lock-schema version fields
+  (`observedVersion` replacing a "pinned version" that would have made
+  drift undetectable) — all specified in PLAN.md/DECISIONS.md before
+  Phase 0 began.
+- **Phase 0 (spikes) — complete.** 2026-09-05. Commit: `6a1d2ae`.
+  Verified by: all 7 spikes have a documented pass/fallback outcome in
+  `docs/spikes/phase-0.md`, matching Phase 0's own Definition of Done.
+  Two findings forced real changes to the plan rather than just
+  confirming it: token counting splits into two kept-apart bases plus a
+  derived ratio (`canonicalTokens`/`wireTokens`/`schemaReuseRatio`,
   DECISIONS.md #5) instead of the original single count, and
   `github-mcp-server` was dropped as the auth-bucket promotion example
   (ships OCI/Docker-only, no npm package — DECISIONS.md #12) in favor of
   `sentry-mcp-server`. Everything else confirmed as designed, with minor
-  corrections recorded in PLAN.md/DECISIONS.md #3/#6 along the way.
+  corrections recorded in PLAN.md/DECISIONS.md #3/#6/#11 along the way.
+  A granularity mismatch between the two token bases (caught on review,
+  after this commit) is corrected in DECISIONS.md #5 directly rather than
+  logged as a separate phase-log line.
 
 ## Open threads
 
@@ -39,12 +45,6 @@ what's genuinely still unresolved.
   server misclassified as `list-auth-required`) was checked for across
   Phase 0 spike 3's 10 candidates and not observed — stays open for the
   larger Phase 5 seed list, where it hasn't been ruled out.
-- The README's ~42k-token `github-mcp-server` citation traces to a
-  secondary aggregator (getunblocked.com); the primary source it names
-  (a dev.to post) 404s as of 2026-09-05 and couldn't be independently
-  verified. Flagged in case a stronger primary citation surfaces later —
-  not blocking, since the README already attributes it as a third-party
-  number, not a `toollock` measurement.
 - Whether the collector's `schedule` trigger fires reliably unattended is
   verified in Phase 2.5 against the real collector, not by Phase 0's
   throwaway workflow (see `docs/spikes/phase-0.md` spike 6). A related
@@ -55,4 +55,25 @@ what's genuinely still unresolved.
 
 ## Do not retry
 
-(none yet — no attempts made this session beyond planning)
+- `npx --loglevel info` / `--loglevel verbose` to read the resolved
+  package version off stdout/stderr — never prints it in any parseable
+  form (spike 7).
+- npm's own debug log (`~/.npm/_logs/*-debug-0.log`) for the same — no
+  usable version line on a cache-revalidated fetch (spike 7).
+- A pre-spawn `npm view <pkg> version` call to learn `observedVersion`
+  ahead of time — works, but superseded by reading the npx cache's
+  `package.json` after the spawn: same answer, zero extra network
+  round-trip (spike 7).
+- `Client.listTools()`'s return value as the source for `wireTokens` —
+  the SDK Zod-validates every message first, and Zod's `.parse()`
+  rebuilds key order from its own schema shape, making the token count
+  depend on `toollock`'s own SDK version rather than the target server
+  (spike 5).
+- Passing a literally empty `env: {}` to the auth probe to get a
+  credential-free spawn — impossible through the public API:
+  `StdioClientTransport` always merges `getDefaultEnvironment()`
+  underneath whatever `env` is given, so `HOME`/`LOGNAME`/`PATH`/`SHELL`/
+  `TERM`/`USER` survive regardless (spike 3).
+
+Full detail on each is in `docs/spikes/phase-0.md`; this list exists so
+a later session doesn't spend time re-discovering the same dead ends.
