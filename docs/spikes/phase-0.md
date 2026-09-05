@@ -154,4 +154,15 @@ around it:**
    accept losing the headline example from the live dataset (it remains
    available as a manual README demo only).
 
-Not resolved here — recorded for a decision.
+**Resolved:** option 2. `sentry-mcp-server` (confirmed above to promote
+cleanly with a placeholder env var) replaces `github-mcp-server` as the
+headline promotion example; a `docker run`/OCI spawn path is explicitly
+rejected (PLAN.md's "Considered and deferred"); option 3's dedicated
+bucket turned out to be unnecessary — the seed list is npm-filtered at
+sourcing time, so non-npm servers never reach the probe at all, and the
+npm filter instead records how many registry entries it excludes as its
+own dataset finding. The `github-mcp-server` ~42k-token figure is cited
+in the README as a third-party measurement, not a `toollock` dataset
+entry. The `no-auth`/`auth-required` bucket names are also renamed to
+`list-open`/`list-env-gated`/`list-auth-required`/`list-timeout` — see
+DECISIONS.md #12 (revised) and #17 for full reasoning.

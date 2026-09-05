@@ -26,27 +26,26 @@ repo is not yet a git repository — that happens in Phase 1. Phase 0
   obtainable at all is unresolved — Phase 0 spike 7. If it isn't,
   `tools.lock` drops that field and `serverInfo.version` is the only
   version data recorded.
-- Phase 0 spike 3 done; two threads it opened are unresolved:
-  - **Decision needed before Phase 2.5:** `github-mcp-server`, the
-    plan's named headline promotion example, ships only as an OCI/Docker
-    image — no npm package exists, so `npx -y <pkg>` can't spawn it at
-    all, independent of auth. Three options recorded in
-    `docs/spikes/phase-0.md` spike 3 (add a `docker run` spawn path;
-    substitute a different headline example — `brave-search` and
-    `sentry-mcp-server` both confirmed to promote cleanly with a
-    placeholder env var; or keep it seed-listed under a new
-    `unsupported-transport` bucket). Not resolved — needs a call.
-  - **Naming question for DECISIONS.md #12:** the empty-env probe
-    correctly measures "is the schema capturable without credentials,"
-    but two real servers requiring accounts to operate (Notion, Linear)
-    hand out their full tool list with zero env vars set — auth is
-    enforced at `tools/call`, not `tools/list`. Both land in the
-    `no-auth` bucket as currently named, which overclaims. Not renamed
-    unilaterally — recorded in spike 3 for a decision.
+- Phase 0 spike 3's two forks are resolved (DECISIONS.md #12 revised,
+  #17 added; PLAN.md updated throughout): `sentry-mcp-server` replaces
+  `github-mcp-server` as the headline `list-env-gated` promotion example;
+  a `docker run`/OCI spawn path is explicitly rejected (PLAN.md's
+  "Considered and deferred"); buckets renamed `list-open` /
+  `list-env-gated` / `list-auth-required` / `list-timeout` to make clear
+  they classify `tools/list` enumeration, not `tools/call` authentication;
+  a new mechanical seed-curation bar (DECISIONS.md #17) is decided.
+  Remaining open items from that work:
   - The `enforceStrictCapabilities` false-positive risk itself (a sloppy
-    server misclassified as `auth-required`) was checked for across all
-    10 spike-3 candidates and not observed — stays open for the larger
-    Phase 5 seed list, where it hasn't been ruled out.
+    server misclassified as `list-auth-required` instead of just
+    badly-declared) was checked for across all 10 spike-3 candidates and
+    not observed — stays open for the larger Phase 5 seed list, where it
+    hasn't been ruled out.
+  - The README's ~42k-token `github-mcp-server` citation traces to a
+    secondary aggregator (getunblocked.com); the primary source it names
+    (a dev.to post) 404s as of 2026-09-05 and couldn't be independently
+    verified. Flagged in case a stronger primary citation surfaces later
+    — not blocking, since the README already attributes it as a
+    third-party number, not a `toollock` measurement.
 
 ## Do not retry
 

@@ -250,30 +250,69 @@ GitHub Actions runner only, zero secrets in the environment,
 - This constraint is what forced decision #12 below — auth-gated servers
   can't use real credentials under this model, full stop.
 
-## 12. Auth-gated server handling (resolved this session)
+## 12. `tools/list` enumeration probe (resolved this session, revised in Phase 0 spike 3)
 
-**Decision:** two-stage, mostly-automatic classification.
+**Decision:** classify every seed candidate by how `tools/list` — not
+`tools/call` — responds, with four buckets:
 
-- **Stage one (automatic, zero research):** probe every seed candidate
-  with an empty environment. Success → bucket `no-auth`. Failure → bucket
-  `auth-required`, kept in the seed list with no measurements. The count
-  of servers stuck in this bucket is itself a dataset finding — the
-  fraction of the public registry that can't be audited without
-  credentials — not an error to hide.
-- **Stage two (manual, timeboxed):** applies only to a shortlist of ≤5
-  high-value `auth-required` servers (`github-mcp-server` first).
-  Hand-source that server's real required env var _names_ from its docs,
-  set them to placeholder values, and retest. Success promotes it to
-  bucket `env-gated` — placeholders aren't credentials, so the zero-secrets
-  guarantee still holds. It joins the dataset with a caveat flag: its real
-  tool list could vary by credential scope from what the placeholder probe
-  saw.
+- `list-open` — lists tools with **zero** env vars set.
+- `list-env-gated` — lists tools once a **placeholder** value is set for
+  a hand-sourced env var name. Promotion is manual and timeboxed (≤5
+  servers, `sentry-mcp-server` first — not `github-mcp-server`; see
+  below). Placeholders aren't credentials, so the zero-secrets guarantee
+  still holds. Joins the dataset with a caveat flag: its real tool list
+  could vary by credential scope from what the placeholder probe saw.
+- `list-auth-required` — fails cleanly (a real error, at or before
+  `initialize`) with no placeholder promotion attempted or successful.
+  Kept in the seed list with no measurements; the count in this bucket is
+  itself a dataset finding — the fraction of the public registry that
+  can't be audited without credentials — not an error to hide.
+- `list-timeout` — no response within the probe's timeout (Phase 1's
+  30s-connect/15s-list wrapper). Kept as its own bucket, **never** folded
+  into `list-auth-required`: a hang and a clean `-32601`/startup error
+  are different facts about the server, and collapsing them would corrupt
+  the distribution this project intends to publish. Confirmed non-
+  hypothetical in spike 3: `@stripe/mcp` proxies `tools/list` to a live
+  authenticated HTTP endpoint, so a placeholder key gets a real `401` and
+  the local process just hangs instead of failing fast.
+
+**This classifies enumeration, not authentication.** A server can be
+`list-open` and still require a real account to *use* it — spike 3 found
+this is not hypothetical: Notion's and Linear's MCP servers both hand out
+their complete tool schema with zero env vars set, because they enforce
+credentials at `tools/call` time, not `tools/list` time. The bucket names
+must not be read as "does this server need auth" in general; they answer
+the narrower question `toollock` actually needs — "is the schema
+capturable without credentials" — and that's the only claim the dataset
+makes.
 
 **Alternatives rejected:**
 
-- Excluding all auth-gated servers from the dataset entirely (loses the
-  headline `github-mcp-server` example from the real, committed dataset —
-  it would only ever be a manual README demo).
+- The original two-bucket `no-auth`/`auth-required` split — replaced
+  because `no-auth` reads as "doesn't need auth" when it only ever meant
+  "listed tools without credentials," and spike 3 produced two real
+  counterexamples (Notion, Linear) where that gap isn't hypothetical.
+- A `docker run`/OCI spawn path alongside `npx -y`, so `github-mcp-server`
+  itself could be captured (it turned out to ship only as an OCI image,
+  no npm package — spike 3, `docs/spikes/phase-0.md`). Rejected: a second
+  transport carries a different security profile than the npx-only story
+  decision #11's collector security write-up is built on. Recorded in
+  PLAN.md's "Considered and deferred," not silently added. The
+  commonly-cited ~42k-token figure for `github-mcp-server` lives in the
+  README as an attributed third-party measurement instead of a
+  `toollock`-collected dataset entry.
+- A dedicated `unsupported-transport` bucket for non-npm registry entries
+  — unnecessary, since the seed list is filtered to `registryType: npm`
+  at sourcing time; non-npm servers never reach the probe. Instead, the
+  npm filter records *how many* registry entries it excludes at filter
+  time — that count is a dataset finding in its own right, the same way
+  the bucket distribution is.
+- Collapsing `list-timeout` into `list-auth-required` — rejected, see
+  above; Phase 1's per-server timeout+kill exists specifically so this
+  bucket's data is trustworthy rather than a symptom of a crashed probe.
+- Excluding all `list-auth-required`/`list-env-gated` servers from the
+  dataset entirely (loses real headline examples from the committed
+  dataset — they'd only ever be manual README demos).
 - Adding real scoped CI secrets for a small allowlist of servers (breaks
   the zero-secrets guarantee; the security write-up would need to become
   "no secrets except an explicit allowlist," a weaker and harder-to-defend
@@ -282,10 +321,13 @@ GitHub Actions runner only, zero secrets in the environment,
   feasible at 50–60 candidates in the time budget — only the split at
   scale needed to be automatic).
 
-**Why:** the empty-env/placeholder-env split needs zero manual research
-and scales to a large seed list; only the promotion step needs hand
-research, and capping that at 5 servers keeps it inside the time budget
-while still capturing the pitch's own headline example.
+**Why:** the no-env/placeholder-env split still needs zero manual
+research and scales to a large seed list; only the promotion step needs
+hand research, and capping that at 5 servers keeps it inside the time
+budget. Splitting out `list-timeout` and being precise about what
+`list-open` actually measures costs nothing at build time and directly
+protects the credibility of the published dataset — the pitch depends on
+these numbers being read literally, not generously.
 
 ## 13. Dataset repo location and commit convention (resolved this session)
 
@@ -378,6 +420,38 @@ TBD-pending-real-data.
 many servers over time; tuning before that data exists would be a guess
 dressed up as a decision. (expand once Phase 5 has run: what the actual
 threshold ends up being, and why)
+
+## 17. Seed list curation bar (resolved this session)
+
+**Decision:** three mechanical criteria, no judgment calls:
+
+1. Resolves in the npm registry (survives the `registryType: npm` filter
+   from decision #12).
+2. Last publish within 12 months.
+3. A repository link present in the package's registry metadata.
+
+Each criterion's drop count is recorded alongside the seed list, the same
+way the auth-bucket distribution and the npm-filter exclusion count are —
+a dataset finding, not a discarded intermediate.
+
+**Alternatives rejected:**
+
+- Hand-curating "quality" servers by judgment — subjective, not
+  reproducible, and not something a scheduled unattended workflow can do.
+- No quality bar at all — rejected after spike 3's registry sourcing work
+  found a noisy long tail of near-duplicate, low-effort namespaces; a raw
+  pull of the first N results would let that noise dominate the seed
+  list.
+- A popularity/download-count threshold — not returned by the registry's
+  list endpoint, so it would need an extra per-package lookup at
+  seed-list-build time; deferred rather than adding an unbounded number
+  of extra API calls to a workflow that already probes every candidate.
+
+**Why:** every criterion is answerable from data the registry already
+returns per server (or, for criterion 1, from the filter already applied)
+— no extra research, no subjective call — and each drop count is itself
+evidence about the state of the public registry, the same spirit as
+decision #12's "the count is itself a dataset finding."
 
 ## Known limitations
 

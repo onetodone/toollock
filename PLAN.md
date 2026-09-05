@@ -55,8 +55,12 @@ required?}[]`. `prompts/list` returns metadata only — rendering the
 Unverified — explicitly a Phase 0 spike, not assumed:
 
 - Whether `$ref` actually shows up in real-world MCP `inputSchema` output.
-- Whether `github-mcp-server` responds to `tools/list` with placeholder
-  env vars, or validates credentials first.
+- `github-mcp-server` cannot be tested for placeholder-env promotion via
+  `tools/list` at all: it ships only as an OCI/Docker image
+  (`ghcr.io/github/github-mcp-server`), not an npm package, so `npx -y
+  <pkg>` can't spawn it — independent of auth. Confirmed in Phase 0
+  spike 3 (`docs/spikes/phase-0.md`); DECISIONS.md #12 records the
+  promotion-example substitution this forced.
 - Real-world stdio hygiene (clean stdout, clean exit) of candidate seed
   servers — the SDK's contract is clear, third-party packages don't
   always honor it.
@@ -77,10 +81,16 @@ before committing later phases to a design:
    the public MCP directory/registry the seed list will be drawn from
    (closes the open question of where servers come from — this spike
    needs ~10 real candidates to test against anyway, so the choice is
-   made here, not left as a loose thread). Confirm an empty-environment
-   probe cleanly splits `no-auth` from `auth-required` against those ~10
-   candidates, and confirm the promotion path (hand-sourced env var names
-   - placeholder values) works for `github-mcp-server` itself.
+   made here, not left as a loose thread). Confirm a probe run with no
+   explicit env vars set cleanly splits enumeration outcomes into the
+   four `list-*` buckets (`list-open` / `list-env-gated` /
+   `list-auth-required` / `list-timeout`, DECISIONS.md #12) against those
+   ~10 candidates, and confirm the placeholder-env promotion path works
+   for a real npm-packaged auth-required server. (Originally targeted
+   `github-mcp-server` itself; spike 3 found it ships only as an
+   OCI/Docker image with no npm package, outside this collector's spawn
+   model — `sentry-mcp-server` is the promotion example instead. See
+   `docs/spikes/phase-0.md` and DECISIONS.md #12.)
 4. Canonicalization against a real `$ref`-bearing schema (find one from a
    Zod-based server) — confirms inlining + cycle detection is tractable,
    or forces a scope-down (hash `$ref` as an opaque structural marker).
@@ -109,7 +119,15 @@ confirms the assumption or documents the fallback it forces.
 non-caret SDK version pin — see DECISIONS.md #15); `src/mcp/connect.ts`
 (spawn + capability-checked connect — Client constructed with
 `enforceStrictCapabilities: true` explicitly, not by relying on a
-server-returned `-32601` for gating, see Phase 0 spike 2); `src/mcp/
+server-returned `-32601` for gating, see Phase 0 spike 2); a per-server
+timeout+kill wrapper around every spawn, used by `connect.ts` and reused
+by the Phase 2.5 collector rather than bolted on separately: 30s on
+`connect()` (sized for a cold `npx -y` install with no local npm cache —
+the actual condition on Phase 2.5's ephemeral runner, not this project's
+warm-cache spike environment) and 15s per `list*` call after that,
+SIGKILL on expiry. Not speculative hardening — spike 3 hit a real hang
+(`@stripe/mcp`, which proxies `tools/list` to a live authenticated
+endpoint and never completes `initialize` on a bad key). `src/mcp/
 capture.ts` (paginated `tools/list` + guarded `prompts/list` → raw JSON);
 `toollock capture <server-spec>` CLI stub.
 **Definition of done:** `capture` prints valid JSON for a real no-auth
@@ -149,8 +167,14 @@ Deliberately pulled forward, before `tools.lock` even exists, so the
 dataset starts accumulating real history around day 5 instead of day 11 —
 time-series data can't be backfilled later.
 
-**Deliverables:** seed list v1 (sourced and auto-probed via Phase 0 spike
-3's method); `.github/workflows/collect.yml` scheduled **daily**
+**Deliverables:** seed list v1 — sourced from the official MCP registry
+filtered to `registryType: npm` (recording how many registry entries
+that filter excludes, a dataset finding in its own right, DECISIONS.md
+#12), then the mechanical curation bar from DECISIONS.md #17
+(npm-resolvable, published within 12 months, repository link present —
+recording each criterion's drop count), then auto-probed via Phase 0
+spike 3's method into the four `list-*` buckets (DECISIONS.md #12);
+`.github/workflows/collect.yml` scheduled **daily**
 (`cron: '0 6 * * *'`) for the remainder of the build window — not
 weekly yet, see the cadence note below — zero configured secrets,
 `permissions: contents: write` only, explicit `git add data/`; a snapshot
@@ -223,10 +247,11 @@ Phase 2's hash comparison); the commit-message format gains the drift
 count — `data: snapshot <ISO date> (<N> servers, <M> drifted)` — **still
 daily, still no "weekly"** (see Phase 2.5's cadence note; the flip to
 weekly is a Phase 6 step, not this one); seed list expanded toward 50–60
-candidates (all auto-probed `no-auth` servers kept; up to 5
-`auth-required` servers promoted to `env-gated` via the timeboxed
-hand-research path, `github-mcp-server` first); the bucket column and
-env-gated caveat flag recorded per dataset entry.
+candidates (all auto-probed `list-open` servers kept; up to 5
+`list-auth-required` servers promoted to `list-env-gated` via the
+timeboxed hand-research path, `sentry-mcp-server` first — see
+DECISIONS.md #12); the bucket column, the `list-env-gated` caveat flag,
+and `list-timeout` counts recorded per dataset entry.
 **Definition of done:** a scheduled run's commit message shows a real,
 non-placeholder drift count computed against the previous snapshot; the
 seed list documents each server's bucket.
@@ -296,7 +321,7 @@ canonicalize/hash → lockfile commands, there is no project.
 | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Real servers misbehave on stdio (stdout logging, hangs) — could double Phase 1/2.5 time                       | Phase 0 spike against real candidates first; swap out any misbehaving server rather than debugging it                                              |
 | `$ref`/cycles more complex than expected                                                                      | Phase 0 spike with a real recursive-schema fixture; fallback is hashing `$ref` as opaque rather than full inlining, documented as a limitation     |
-| Env-gated promotion research (github-mcp-server and up to 4 others) takes longer than timeboxed               | Hard timebox per server; a server that doesn't promote in time just stays `auth-required` — the bucket count absorbs the overrun, not the schedule |
+| `list-env-gated` promotion research (`sentry-mcp-server` and up to 4 others) takes longer than timeboxed       | Hard timebox per server; a server that doesn't promote in time just stays `list-auth-required` — the bucket count absorbs the overrun, not the schedule |
 | GitHub Actions bot-commit permissions/identity subtleties eat a day                                           | Phase 0 spike with a trivial no-op workflow before Phase 2.5's real collector                                                                      |
 | Non-determinism in JCS/token counts causes noisy no-op lockfile diffs — undermines the "human-diffable" pitch | Phase 2 fixture explicitly hash-twice-and-byte-compare                                                                                             |
 | Scope creep polishing the security-scanner positioning comparison                                             | Cut-line protects this; one honest paragraph, not a feature matrix                                                                                 |
@@ -314,3 +339,12 @@ Not in scope for this plan, not silently folded into a phase above:
 - `resources/list` capture — original scope was tools + prompts only.
 - Final `cost-drift` threshold tuning — ships with a stub default, marked
   TBD pending real dataset numbers.
+- A `docker run`/OCI spawn path alongside `npx -y`, to let OCI-only
+  servers like `github-mcp-server` be captured directly. Rejected in
+  Phase 0 spike 3 (DECISIONS.md #12): a second transport carries a
+  different security profile than the npx-only story decision #11's
+  collector security write-up is built on, and scope discipline says no
+  to a second transport for the sake of one headline example.
+  `github-mcp-server`'s widely-cited ~42k-token figure appears in the
+  README as an attributed third-party measurement instead of a
+  `toollock`-collected one.
