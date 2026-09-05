@@ -52,3 +52,106 @@ third-party server with sloppily-declared capabilities could now throw
 locally on `tools/list` too. Spike 3's probing must distinguish that
 failure mode from actual auth failures, or it will misclassify a sloppy
 server as `auth-required` and quietly corrupt the bucket distribution.
+
+## 3. Auth-bucket probing + candidate sourcing — PASS on mechanism, one open fork
+
+**Seed source, decided:** the official registry at
+`registry.modelcontextprotocol.io` (`/v0/servers`, paginated via
+`nextCursor`, filterable with `?search=`). Live, returns both
+`packages` (npm/pypi/oci, with `registryType`) and `remotes` (hosted
+HTTP) entries. Filtering to `registryType: npm` matches the collector's
+`npx -y <pkg>` spawn model. Caveat worth carrying forward: the long tail
+is noisy — large numbers of single-purpose, near-duplicate, or
+low-effort namespaces alongside legitimate servers. Phase 2.5/5 seed
+curation needs a quality bar beyond "exists in the registry," not just a
+raw pull of the first N results.
+
+**Environment-var-free probe, ~~empty-environment~~ corrected:** read
+`stdio.js` before running anything — the SDK unconditionally computes
+`env` as `{...getDefaultEnvironment(), ...serverParams.env}`.
+`getDefaultEnvironment()` (`HOME`, `LOGNAME`, `PATH`, `SHELL`, `TERM`,
+`USER` on POSIX) is merged in *underneath* whatever `env` is passed, so
+even `env: {}` cannot produce a literally empty environment — there is no
+public-API way to unset those six keys. This isn't a problem: it's
+exactly the environment the probe wants (`npx` needs `PATH`/`HOME` to
+function; none of the six are credential-shaped). "Empty-environment
+probe" in the plan should be read as "no explicit env passed," which is
+what was actually tested.
+
+Probed 10 real candidates (Client built with `enforceStrictCapabilities:
+true`, per spike 2) — 5 expected no-auth, 5 expected auth-required:
+
+| Server | Expected | Result |
+| --- | --- | --- |
+| server-filesystem, server-memory, server-everything, server-sequential-thinking, context7-mcp | no-auth | no-auth (all 5, as spike 1) |
+| `@notionhq/notion-mcp-server` | auth-required | **no-auth** — connects and lists 24 tools with zero env vars set |
+| `mcp-server-linear` | auth-required | **no-auth** — connects and lists 24 tools with zero env vars set |
+| `@sentry/mcp-server` | auth-required | auth-required — exits before completing initialize, clear stderr naming the missing var |
+| `@modelcontextprotocol/server-brave-search` | auth-required | auth-required — exits before completing initialize, clear stderr naming the missing var |
+| `@stripe/mcp` | auth-required | auth-required — exits before completing initialize, clear stderr naming the missing var |
+
+**Finding, not a bug:** Notion's and Linear's MCP servers both hand out
+their full tool schema with no credentials at all — auth is enforced at
+`tools/call` time, not `tools/list` time. The probe's binary bucket, as
+specified, measures "is the schema capturable without credentials," which
+is the actual question `toollock` needs answered — but that is narrower
+than what the bucket names in DECISIONS.md #12 (`no-auth` /
+`auth-required`) imply to a reader. Two real "you need an account to use
+this" servers will land in the `no-auth` bucket as currently named. This
+is a naming/semantics question for DECISIONS.md #12, not a probe failure
+— flagging for a decision rather than renaming unilaterally.
+
+**`enforceStrictCapabilities` false-positive risk (flagged before this
+spike):** checked for, not observed. All 7 candidates that reached
+`listTools` had correctly declared their `tools` capability; none of the
+3 real auth failures got far enough to reach `listTools` at all (they
+exited during/before `initialize`). The risk is real (confirmed
+mechanically in spike 2) but this sample of 10 didn't happen to contain a
+sloppy-declaration case — stays open for the larger Phase 5 seed list.
+
+**Promotion path — fork, not a clean pass.** The plan named
+`github-mcp-server` as the first promotion target. It doesn't fit the
+collector's spawn model at all, independent of auth: the *official*
+package (`io.github.github/github-mcp-server` in the registry, confirmed
+against its own README) ships only as an OCI image
+(`ghcr.io/github/github-mcp-server`, run via `docker run`) or a remote
+hosted endpoint — there is no npm package. (`@modelcontextprotocol/
+server-github`, the old npm package, is dead: `npm view` returns
+"Package no longer supported.") `npx -y <pkg>` cannot spawn it. This is a
+transport mismatch one layer beneath auth-bucketing, and it isn't
+something this spike can resolve by itself — see "Open fork" below.
+
+Tested the placeholder-promotion *mechanism* instead against the 3
+real npm-packaged auth-required servers this spike found:
+
+- `server-brave-search`: promotes cleanly — placeholder `BRAVE_API_KEY`
+  passes the server's local presence check, server starts, lists 2 tools.
+- `@sentry/mcp-server`: promotes cleanly — placeholder
+  `SENTRY_ACCESS_TOKEN` passes, server starts, lists 9 tools.
+- `@stripe/mcp`: does **not** promote, and not the way expected. It's a
+  local stdio process that itself forwards `tools/list` to Stripe's real
+  hosted MCP endpoint over HTTP. The placeholder key gets a real `401`
+  from that live endpoint, and instead of failing fast, the process never
+  completes the MCP `initialize` handshake — it just hangs, logging the
+  401 to stderr, until the collector's own timeout kills it. Confirms
+  placeholder-promotion only works for servers that generate their tool
+  schema locally, not ones that proxy `tools/list` to an authenticated
+  remote API — and confirms the collector's per-server timeout+kill isn't
+  optional hardening, it's load-bearing (this is the second real hang
+  found in spike work, after none in spike 1's happy-path sample).
+
+**Open fork — needs a call before Phase 2.5 designs the bucket schema
+around it:**
+
+1. Add a `docker run` spawn path alongside `npx -y` so `github-mcp-server`
+   itself can be captured — reopens DECISIONS.md #1's stdio/npx-only
+   stack decision.
+2. Drop `github-mcp-server` as the headline promotion example; substitute
+   a real npm-packaged auth-required server (`brave-search` or
+   `sentry-mcp-server`, both already confirmed to promote cleanly above).
+3. Keep `github-mcp-server` in the seed list under a new
+   `unsupported-transport` bucket, distinct from the auth buckets, and
+   accept losing the headline example from the live dataset (it remains
+   available as a manual README demo only).
+
+Not resolved here — recorded for a decision.
