@@ -7,14 +7,21 @@ Planning complete, including a correction pass after review: cadence
 (previously undefined), and lock-schema version fields (`observedVersion`
 replacing a "pinned version" that would have made drift undetectable) are
 now specified in PLAN.md/DECISIONS.md. No code has been written yet —
-that starts in Phase 1. Phase 0 (spikes, 7 items): 7 of 7 have a
-documented outcome, though spike 6 has one loose end (see below) before
-its throwaway workflows get deleted. See `docs/spikes/phase-0.md` for
-full spike notes.
+that starts in Phase 1. Phase 0 (spikes, 7 items) is complete: all 7 have
+a documented outcome, no open loose ends. See `docs/spikes/phase-0.md`
+for full spike notes.
 
 ## Phase log
 
-(none yet — no phase has been completed)
+- **Phase 0 (spikes) — complete.** All 7 unknowns have a documented
+  outcome in `docs/spikes/phase-0.md`. Two findings forced real changes
+  to the plan rather than just confirming it: token counting splits into
+  two kept-apart bases (`canonicalTokens`/`wireTokens`/`schemaReuseRatio`,
+  DECISIONS.md #5) instead of the original single count, and
+  `github-mcp-server` was dropped as the auth-bucket promotion example
+  (ships OCI/Docker-only, no npm package — DECISIONS.md #12) in favor of
+  `sentry-mcp-server`. Everything else confirmed as designed, with minor
+  corrections recorded in PLAN.md/DECISIONS.md #3/#6 along the way.
 
 ## Open threads
 
@@ -63,21 +70,18 @@ full spike notes.
   has to independently tee the child process's raw stdout for the
   `tools/list` line, not just call `listTools()` — see PLAN.md's Phase 1
   deliverables and DECISIONS.md #5's exact-boundary note.
-- **Spike 6, one item still open:** bot-commit identity, scoped diff,
+- Spike 6 fully closed: bot-commit identity, scoped diff,
   `permissions: contents: write` overriding the repo's read-only default,
-  branch-protection status (none configured on `main`), and non-cross-
-  triggering of other `on: push` workflows are all confirmed against the
-  real repo (`onetodone/toollock`) via a `workflow_dispatch` run of a
-  throwaway `spike6-collector-test.yml`. Not yet observed: whether the
-  same workflow's `schedule: '*/15 * * * *'` trigger actually fires on
-  its own — checked ~4 minutes after setup, before the first boundary
-  passed; the plan itself expected this could take hours on a new
-  workflow. Not blocking anything (the job `workflow_dispatch` ran is
-  identical to what `schedule` would run), but the throwaway workflows
-  (`spike6-collector-test.yml`, `spike6-push-listener-test.yml`) and the
-  test commit they produced (`data/spike6-test/`) are still live in the
-  repo pending that observation, and need deleting/reverting once
-  resolved either way.
+  no branch protection on `main`, and non-cross-triggering of other
+  `on: push` workflows all confirmed against the real repo
+  (`onetodone/toollock`). The `schedule` trigger itself didn't fire in a
+  39-minute observation window (13 polls) despite crossing two `*/15`
+  boundaries — consistent with, and now a directly observed instance of,
+  the plan's own expectation that a new workflow's first scheduled run
+  can lag well past its nominal interval. Not blocking Phase 2.5: every
+  mechanic its real `collect.yml` depends on was already proven via
+  `workflow_dispatch`. Throwaway workflows and the test commit are
+  removed.
 
 ## Do not retry
 

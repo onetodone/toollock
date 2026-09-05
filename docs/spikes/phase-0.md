@@ -326,14 +326,20 @@ cross-triggering).
   trigger it. Matches documented GitHub behavior, now independently
   confirmed against this repo's actual settings rather than taken on
   faith.
-- **Scheduled trigger's actual first fire:** not yet observed (checked ~4
-  minutes after setup; the first `*/15 * * * *` boundary hadn't passed).
-  Per the plan's own expectation this can be delayed hours on a brand new
-  workflow. Not blocking: the underlying mechanics (identity,
-  permissions, scoping, non-cross-triggering) are already proven via
-  `workflow_dispatch`, which runs the exact same job the schedule trigger
-  would. Checking back later; this note and the throwaway workflows will
-  be updated/removed once resolved either way.
+- **Scheduled trigger's actual first fire:** polled every 3 minutes for
+  ~39 minutes (13 checks, `gh run list -e schedule`); zero scheduled runs
+  landed in that window despite a `*/15 * * * *` cron that should have
+  crossed two boundaries. Matches the plan's own expectation that a new
+  workflow's first scheduled run can be delayed well past its nominal
+  interval — now observed directly rather than assumed, though the
+  actual delay length stays unmeasured (didn't wait hours to find the
+  upper bound; not worth holding a live test cron open in the real repo
+  that long). Not blocking: `workflow_dispatch` already exercises the
+  identical job, so every mechanic Phase 2.5's real `collect.yml` depends
+  on (identity, permissions, scoped diff, non-cross-triggering) is
+  proven regardless of when GitHub gets around to the first scheduled
+  tick. Throwaway workflows and the test commit removed after this
+  finding was recorded — see the cleanup commit.
 
 ## 7. Version introspection — PASS, cheaply obtainable
 
