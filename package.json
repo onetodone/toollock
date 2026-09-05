@@ -12,7 +12,9 @@
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "test": "node --import tsx --test src/**/*.test.ts",
-    "check:hash-determinism": "tsx scripts/check-hash-determinism.ts"
+    "check:hash-determinism": "tsx scripts/check-hash-determinism.ts",
+    "collect": "tsx scripts/run-collector.ts",
+    "snapshot:registry": "tsx scripts/snapshot-registry.ts"
   },
   "engines": {
     "node": ">=20"
