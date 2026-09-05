@@ -17,7 +17,9 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.30.0"
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "canonicalize": "^4.0.0",
+    "gpt-tokenizer": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
