@@ -31,6 +31,14 @@ below for how each phase concluded.
   A granularity mismatch between the two token bases (caught on review,
   after this commit) is corrected in DECISIONS.md #5 directly rather than
   logged as a separate phase-log line.
+- **Phase 1 (project skeleton + MCP client core) — complete.** 2026-09-05.
+  Commit: `caecefa`. Verified by: `npm test` passes both integration
+  tests (spawning `server-memory`, no prompts, and `server-everything`,
+  with prompts — Phase 1's own Test plan); `toollock capture <pkg>` runs
+  end to end against each with a clean exit and no lingering process;
+  `npm run build` + a direct run of the compiled `dist/cli.js` both
+  checked by hand. `package.json` pins `@modelcontextprotocol/sdk` to the
+  exact `1.30.0` (DECISIONS.md #15).
 
 ## Open threads
 
