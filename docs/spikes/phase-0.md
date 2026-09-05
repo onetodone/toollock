@@ -220,3 +220,14 @@ large, systematic understatement, not noise, for the exact command
 This is unresolved here — it changes what spike 5 ("fix the exact
 tokenized string") is actually supposed to fix, so it's flagged before
 running spike 5 rather than after.
+
+**Resolved:** keep both, they measure different things. `canonicalTokens`
+(post-inline JCS bytes, hash-coupled, basis for `cost-drift`) and
+`wireTokens` (raw `tools/list` `tools` array only — not the JSON-RPC
+envelope — basis for `budget` and `contextBudget`) are both recorded, plus
+a derived `schemaReuseRatio = wireTokens / canonicalTokens` per server per
+snapshot. Canonical-only would understate `budget` by ~4x on
+Notion-shaped servers; wire-only would break the hash/count coupling
+spike 5 exists to guarantee. Full reasoning in DECISIONS.md #5 (revised).
+Also folded in: `$ref` showing up only in the OpenAPI-derived server and
+none of the Zod/SDK-native ones is now a line in DECISIONS.md #3.

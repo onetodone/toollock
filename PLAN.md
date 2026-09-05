@@ -100,9 +100,15 @@ before committing later phases to a design:
    whether token counting should use raw wire bytes or post-inline
    canonical bytes — they diverge by ~3.6x on the real example found.)
 5. Token-count determinism: confirm `gpt-tokenizer` o200k is synchronous/
-   offline, and fix the exact tokenized string — JCS-canonical bytes of
-   `{name, description, inputSchema}`, not a fresh `JSON.stringify`, so
-   the reported number is tied to the same bytes being hashed.
+   offline, and fix the exact tokenized string for **both** of decision
+   #5's bases (revised in Phase 0 spike 4, which found the two diverge by
+   ~3.6x on a real server) — `canonicalTokens` (JCS-canonical bytes of
+   `{name, description, inputSchema}` after `$ref` inlining, tied to the
+   same bytes being hashed) and `wireTokens` (the raw `tools/list`
+   response's `tools` array only, before any normalization — explicitly
+   not the surrounding JSON-RPC envelope, since a client never loads RPC
+   framing into context). Confirm `schemaReuseRatio = wireTokens /
+   canonicalTokens` is stable given the same two fixed strings.
 6. GitHub Actions bot-commit mechanics: a trivial no-op scheduled workflow
    that stages `data/`, commits as a bot identity, pushes, using only the
    automatic `GITHUB_TOKEN` and `permissions: contents: write`.
@@ -145,8 +151,11 @@ prompts, one without).
 
 **Deliverables:** `$ref` inlining with cycle detection, `required[]`/
 `enum[]` sort, JCS wrapper, `schemaHash`/`promptHash` (sha256 of the split
-canonical bytes), token counter on the fixed serialization from Phase 0
-spike 5.
+canonical bytes); two token counters — `canonicalTokens` (post-inline JCS
+bytes, hash-coupled) and `wireTokens` (raw `tools/list` `tools` array,
+envelope excluded) — plus the derived `schemaReuseRatio = wireTokens /
+canonicalTokens` per server, all on the fixed serializations from Phase 0
+spike 5 (DECISIONS.md #5).
 
 The `ToolSchema`/`PromptSchema` split is defined explicitly, not left
 implicit:
@@ -183,8 +192,10 @@ spike 3's method into the four `list-*` buckets (DECISIONS.md #12);
 (`cron: '0 6 * * *'`) for the remainder of the build window — not
 weekly yet, see the cadence note below — zero configured secrets,
 `permissions: contents: write` only, explicit `git add data/`; a snapshot
-writer only — capture + canonicalize + hash + token count per server,
-appended to `data/` as a dated entry. No drift computation yet; the
+writer only — capture + canonicalize + hash + both token counts
+(`canonicalTokens`, `wireTokens`) + `schemaReuseRatio` per server,
+appended to `data/` as a dated entry (DECISIONS.md #5). No drift
+computation yet; the
 commit message for this phase is `data: snapshot <ISO date> (<N>
 servers)` — no drift count, no "weekly" (both are inaccurate right now).
 **Definition of done:** one real scheduled (or `workflow_dispatch`-
@@ -232,8 +243,10 @@ determinism no-op case.
 
 ## Phase 4 — Drift classifier polish + `budget` + CI usability (~1.5 days)
 
-**Deliverables:** `toollock budget` (context-tax table, sorted by token
-share — makes the "42k tokens" pitch concrete for any server); classifier
+**Deliverables:** `toollock budget` (context-tax table built from
+`wireTokens` — what a real client's context window actually pays,
+DECISIONS.md #5 — sorted by token share, makes the "42k tokens" pitch
+concrete for any server); classifier
 edge cases (renamed vs. redescribed tool, `required[]` widened vs.
 narrowed); example consumer workflow
 (`.github/workflows/toollock-verify.yml.example`); DECISIONS.md polished

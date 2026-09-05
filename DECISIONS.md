@@ -59,6 +59,14 @@ structure.
 - JCS sorts object keys only, not array contents — confirmed by reading
   the spec — which is exactly why the custom pre-pass for `required[]`/
   `enum[]` is necessary, not optional.
+- `$ref` risk is concentrated in OpenAPI-derived servers, not Zod/
+  SDK-native ones. Phase 0 spike 4 found `$ref` in the one OpenAPI-derived
+  server tested (`@notionhq/notion-mcp-server`, 152 occurrences across 24
+  tools) and in none of the four Zod/SDK-native servers tested.
+  `zod-to-json-schema` output doesn't structurally share definitions the
+  way an OpenAPI→JSON-Schema converter does — the inlining and cycle-
+  detection code exists for a real but narrower slice of the ecosystem
+  than "any MCP server" might suggest.
 
 ## 4. Dual hash, never one
 
@@ -92,30 +100,81 @@ a prompt's hash was divided. Defined in Phase 2:
   Golden fixtures mirror the tool invariants: a description-only change on
   a prompt argument moves `promptHash` and leaves `schemaHash` stable.
 
-## 5. Token counting
+## 5. Token counting — two bases, not one (revised in Phase 0 spike 4)
 
-**Decision:** `gpt-tokenizer` (o200k), offline, serializing `{name,
-description, inputSchema}`. Absolute numbers are tokenizer-dependent; only
-relative ratios are claimed.
+**Decision:** `gpt-tokenizer` (o200k), offline, computing two separate
+token counts, kept side by side rather than collapsed into one:
+
+- `canonicalTokens` — tokenizes the JCS-canonical bytes of `{name,
+  description, inputSchema}` *after* `$ref` inlining (decision #3's
+  pipeline). Tied to exactly the same bytes `schemaHash`/`promptHash` are
+  computed from — deterministic, and the basis for `cost-drift`
+  (decision #7): a change here means the structurally-hashed content
+  actually changed.
+- `wireTokens` — tokenizes the raw `tools/list` JSON-RPC response's
+  `tools` array *before* any normalization: no `$ref` inlining, no
+  `required[]`/`enum[]` sort, no JCS. Scope is exact, for
+  reproducibility: the `tools` array's own JSON only, **never** the
+  surrounding JSON-RPC envelope (`jsonrpc`, `id`, the `result` wrapper) —
+  a client never loads RPC framing into its context window, only the
+  array's contents. This is what a real MCP client actually pays for on
+  every call; it's the basis for `toollock budget`'s table and for
+  `tools.lock`'s `contextBudget` total.
+
+A third, derived field travels with them: `schemaReuseRatio = wireTokens
+/ canonicalTokens`, recorded per server per snapshot in the dataset
+(Phase 2.5/5). A ratio meaningfully above 1 names a specific, fixable
+inefficiency in that specific server — e.g. `@notionhq/notion-mcp-server`
+measured at ~3.6x in Phase 0 spike 4, because it ships its entire
+`$defs` dictionary to every tool regardless of what that tool's own
+schema actually references. This is a measurement of the *server*, not
+of `toollock` itself — recorded as a dataset field precisely because
+it's evidence, not an artifact of the tool's own choices.
+
+Absolute numbers are tokenizer-dependent; only relative ratios (between
+servers, or between `wireTokens` and `canonicalTokens` for the same
+server) are claimed as meaningful across implementations.
 
 **Alternatives rejected:**
 
 - Calling a real tokenizer API at runtime (adds a network dependency and
   breaks offline/CI use).
 - A different encoding (cl100k) or a rough character-count heuristic.
+- `canonicalTokens` only — the original design, before Phase 0 spike 4
+  measured the real gap on `@notionhq/notion-mcp-server`: 17,430 raw
+  tokens vs. 4,882 canonical tokens across its 24 tools. Reporting only
+  the canonical number in `budget` would understate the real wire-level
+  cost by roughly 4x for a server shaped like that one — not noise, for
+  the one command whose entire pitch is honest token cost.
+- `wireTokens` only — rejected because it breaks the hash/token coupling
+  Phase 0 spike 5 exists to fix: an unnormalized number drifts with
+  formatting and key-order noise that has no bearing on `schemaHash`,
+  which would make `cost-drift` fire (or fail to fire) on the wrong
+  signal.
 
 **Why:**
 
 - (expand: why o200k specifically — matches current-generation model
   tokenizers, is the gpt-tokenizer default)
-- Fixed to tokenize the _canonical_ (JCS) bytes of the serialized object,
-  not a fresh `JSON.stringify` — otherwise the reported count isn't tied
-  to the same bytes being hashed, and would drift with formatting.
+- The two numbers answer different questions and neither substitutes for
+  the other. `canonicalTokens` stays deterministic and hash-coupled, so
+  `cost-drift` fires on real structural growth, not formatting noise.
+  `wireTokens` stays truthful to what a model's context window is
+  actually billed for, so `budget` and `contextBudget` aren't quietly
+  wrong by a multiple.
+- `schemaReuseRatio` costs nothing extra to compute once both bases
+  exist, and it's the kind of concrete, per-server finding — "this
+  specific server wastes ~72% of its tool-definition tokens on unused
+  shared `$defs`" — that makes the published dataset more than a hash
+  log.
 
 ## 6. `tools.lock` format
 
 **Decision:** JSON, sorted keys, human-diffable in a PR. Stores server id,
-transport, both hashes, per-tool token counts, a total `contextBudget`,
+transport, both hashes, per-tool token counts — `canonicalTokens` and
+`wireTokens` each (decision #5) — a total `contextBudget` (the
+`wireTokens` sum, since that's what a real client's context window pays;
+`canonicalTokens` stays coupled to the hashes instead, see decision #5),
 and version information — but **not** a pinned package version (corrected
 during planning, see below). Instead:
 
@@ -159,7 +218,7 @@ during planning, see below). Instead:
 - `schema-breaking` (tool removed, type changed, required widened) → fail
 - `schema-additive` (new tool, new optional param) → warn
 - `prompt-drift` (description text changed) → fail
-- `cost-drift` (token growth over threshold) → warn
+- `cost-drift` (`canonicalTokens` growth over threshold) → warn
 
 **Alternatives rejected:**
 
@@ -172,6 +231,9 @@ during planning, see below). Instead:
 - (expand: why prompt-drift fails rather than warns — this is the
   rug-pull surface, so silence is the wrong default)
 - (expand: the exact `cost-drift` threshold — currently a stub, see #16)
+- `canonicalTokens`, not `wireTokens`, is the basis (decision #5) — so
+  `cost-drift` fires on real structural token growth, not on wire-format
+  noise that has nothing to do with `schemaHash`.
 
 ## 8. Commands
 
