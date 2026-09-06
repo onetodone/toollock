@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-06",
+  "capturedAt": "2026-09-06T16:53:34.264Z",
+  "source": "https://registry.modelcontextprotocol.io/v0/servers",
+  "pages": 935,
+  "cappedByMaxPages": false,
+  "tally": {
+    "totalEntries": 93460,
+    "distinctEntryKeys": 93460,
+    "latestEntries": 27553,
+    "distinctLatestNames": 27553,
+    "byRegistryType": {
+      "npm": 8232,
+      "oci": 861,
+      "pypi": 3593,
+      "mcpb": 699,
+      "nuget": 107,
+      "cargo": 43
+    },
+    "remoteOnlyEntries": 14145,
+    "neitherPackagesNorRemotes": 407
+  },
+  "curation": {
+    "totalNpmCandidates": 8232,
+    "failedResolve": 35,
+    "failedRecency": 0,
+    "failedRepository": 413,
+    "survivorCount": 7784
+  }
+}

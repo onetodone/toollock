@@ -99,7 +99,10 @@ async function main() {
   // ~7,700-entry array is large, but it's write-once and rarely changes.
   const byPackage = new Map(npmCandidates.map((c) => [c.packageName, c]));
   const survivors = [...curation.survivors]
-    .sort((a, b) => a.localeCompare(b))
+    // Plain Unicode-codepoint sort, not localeCompare — the order has to
+    // be re-verifiable from the committed file without depending on which
+    // ICU/locale data a machine happens to have.
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     .map((packageName) => {
       const c = byPackage.get(packageName);
       return { packageName, name: c?.name ?? null, repositoryUrl: c?.repositoryUrl ?? null };

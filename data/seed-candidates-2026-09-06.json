@@ -1,0 +1,513 @@
+{
+  "date": "2026-09-06",
+  "drawnAt": "2026-09-06T16:54:24.038Z",
+  "method": "seeded Fisher-Yates shuffle over the sorted survivor list (DECISIONS.md #17)",
+  "prng": "xmur3+mulberry32",
+  "seed": "toollock/seed-list/v2/2026-09",
+  "survivorFile": "data/registry/2026-09-06-survivors.json",
+  "survivorFileSha256": "996b5c246c9ad0336b613c2a1be6e216f00c275891c2c27309777b12f2d56722",
+  "survivorCount": 7784,
+  "drawSize": 100,
+  "candidates": [
+    {
+      "packageName": "@blackwell-systems/knowing",
+      "name": "io.github.blackwell-systems/knowing",
+      "repositoryUrl": "https://github.com/blackwell-systems/knowing"
+    },
+    {
+      "packageName": "repomemory",
+      "name": "io.github.DanielGuru/repomemory",
+      "repositoryUrl": "https://github.com/DanielGuru/repomemory"
+    },
+    {
+      "packageName": "@cyanheads/onebusaway-mcp-server",
+      "name": "io.github.cyanheads/onebusaway-mcp-server",
+      "repositoryUrl": "https://github.com/cyanheads/onebusaway-mcp-server"
+    },
+    {
+      "packageName": "@pedrot95dev/twitterapi.mcp",
+      "name": "io.github.pedrot95dev/twitterapi",
+      "repositoryUrl": "https://github.com/pedrot95dev/twitterapi.mcp"
+    },
+    {
+      "packageName": "agent-receipts-mcp",
+      "name": "io.github.dhanushs1912-svg/agent-receipts-mcp",
+      "repositoryUrl": "https://github.com/dhanushs1912-svg/agent-receipts-mcp"
+    },
+    {
+      "packageName": "@roamzy/mcp-server",
+      "name": "io.github.roamzy-io/mcp-server",
+      "repositoryUrl": "https://github.com/roamzy-io/mcp-server"
+    },
+    {
+      "packageName": "@ckalima/pipedrive-mcp-server",
+      "name": "io.github.ckalima/pipedrive-mcp-server",
+      "repositoryUrl": "https://github.com/ckalima/pipedrive-mcp-server"
+    },
+    {
+      "packageName": "@hypnosis/ssh-mcp-server",
+      "name": "io.github.hypnosis/ssh-mcp-server",
+      "repositoryUrl": "https://github.com/hypnosis/ssh-mcp-server"
+    },
+    {
+      "packageName": "mcp-searxng",
+      "name": "io.github.ihor-sokoliuk/mcp-searxng",
+      "repositoryUrl": "https://github.com/ihor-sokoliuk/mcp-searxng"
+    },
+    {
+      "packageName": "@cleocode/cleo",
+      "name": "io.github.kryptobaseddev/cleo-mcp-server",
+      "repositoryUrl": "https://github.com/kryptobaseddev/cleo.git"
+    },
+    {
+      "packageName": "@three-ws/intel-mcp",
+      "name": "io.github.nirholas/intel-mcp",
+      "repositoryUrl": "https://github.com/nirholas/three.ws"
+    },
+    {
+      "packageName": "unifi-mcp-server",
+      "name": "io.github.enuno/unifi-mcp-server",
+      "repositoryUrl": "https://github.com/enuno/unifi-mcp-server"
+    },
+    {
+      "packageName": "tokenmonkey-mcp-server",
+      "name": "io.github.lifestylearb/tokenmonkey",
+      "repositoryUrl": "https://github.com/lifestylearb/tokenmonkey"
+    },
+    {
+      "packageName": "pixelsquads-mcp-server",
+      "name": "io.github.aitor-alt/pixel-squads",
+      "repositoryUrl": "https://github.com/aitor-alt/pixel"
+    },
+    {
+      "packageName": "@supernova123/jira-mcp-server",
+      "name": "io.github.friendlygeorge/jira-mcp-server",
+      "repositoryUrl": "https://github.com/friendlygeorge/jira-mcp-server"
+    },
+    {
+      "packageName": "mcp-design-system-extractor",
+      "name": "io.github.freema/mcp-design-system-extractor",
+      "repositoryUrl": "https://github.com/freema/mcp-design-system-extractor"
+    },
+    {
+      "packageName": "abapilot",
+      "name": "io.github.NicoHern/abapilot-mcp",
+      "repositoryUrl": "https://github.com/NicoHern/abapilot-mcp"
+    },
+    {
+      "packageName": "starwell-mcp",
+      "name": "dev.starwell/world-data-statistics",
+      "repositoryUrl": "https://github.com/Adarsh4052/starwell-mcp"
+    },
+    {
+      "packageName": "devloop-mcp",
+      "name": "io.github.vincentvella/devloop",
+      "repositoryUrl": "https://github.com/vincentvella/devloop"
+    },
+    {
+      "packageName": "@reftrixmcp/mcp-server",
+      "name": "io.github.TKMD/reftrixmcp",
+      "repositoryUrl": "https://github.com/TKMD/ReftrixMCP"
+    },
+    {
+      "packageName": "tebra-mcp-server",
+      "name": "com.jamesrosingmd/tebra",
+      "repositoryUrl": "https://github.com/jamesrosing/tebra-mcp-server"
+    },
+    {
+      "packageName": "funplay-cocos-mcp",
+      "name": "io.github.FunplayAI/funplay-cocos-mcp",
+      "repositoryUrl": "https://github.com/FunplayAI/funplay-cocos-mcp"
+    },
+    {
+      "packageName": "@cinch-codes/mcp",
+      "name": "io.github.yusufkadry/cinch",
+      "repositoryUrl": "https://github.com/yusufkadry/cinch-mcp"
+    },
+    {
+      "packageName": "@cyanheads/socrata-mcp-server",
+      "name": "io.github.cyanheads/socrata-mcp-server",
+      "repositoryUrl": "https://github.com/cyanheads/socrata-mcp-server"
+    },
+    {
+      "packageName": "babelwrap-mcp",
+      "name": "io.github.babelwrap/babelwrap-mcp",
+      "repositoryUrl": "https://github.com/babelwrap/babelwrap-mcp"
+    },
+    {
+      "packageName": "@upstash/redis-mcp",
+      "name": "io.github.upstash/redis-mcp",
+      "repositoryUrl": "https://github.com/upstash/redis-mcp"
+    },
+    {
+      "packageName": "mcp-live-music",
+      "name": "io.github.geeks-accelerator/live-music",
+      "repositoryUrl": "https://github.com/geeks-accelerator/ai-concert"
+    },
+    {
+      "packageName": "@useblip/email",
+      "name": "io.github.blipemail/email",
+      "repositoryUrl": "https://github.com/blipemail/blip"
+    },
+    {
+      "packageName": "google-documents-mcp",
+      "name": "io.github.domdomegg/google-documents-mcp",
+      "repositoryUrl": "https://github.com/domdomegg/google-documents-mcp.git"
+    },
+    {
+      "packageName": "@dockndevai/mcp-grafana",
+      "name": "io.github.dockndevai/mcp-grafana",
+      "repositoryUrl": "https://github.com/dockndevai/mcp-grafana"
+    },
+    {
+      "packageName": "@hellocoop/admin-mcp",
+      "name": "io.github.hellocoop/admin-mcp",
+      "repositoryUrl": "https://github.com/hellocoop/admin-mcp"
+    },
+    {
+      "packageName": "portlandmaps-mcp",
+      "name": "io.github.GPTNowLLC/portlandmaps-mcp",
+      "repositoryUrl": "https://github.com/GPTNowLLC/portlandmaps-mcp"
+    },
+    {
+      "packageName": "trvl-mcp",
+      "name": "io.github.MikkoParkkola/trvl",
+      "repositoryUrl": "https://github.com/MikkoParkkola/trvl"
+    },
+    {
+      "packageName": "@aaronsb/confluence-cloud-mcp",
+      "name": "io.github.aaronsb/confluence-cloud",
+      "repositoryUrl": "https://github.com/aaronsb/confluence-cloud"
+    },
+    {
+      "packageName": "dingdawg-finance-agent",
+      "name": "io.github.dingdawg/dingdawg-finance-agent",
+      "repositoryUrl": "https://github.com/dingdawg/dingdawg-finance-agent"
+    },
+    {
+      "packageName": "@virga-mcp/server",
+      "name": "io.github.mcmurrym/virga-weather",
+      "repositoryUrl": "https://github.com/mcmurrym/virga"
+    },
+    {
+      "packageName": "civic-library-mcp",
+      "name": "io.github.adriancisnerosspeed-hub/civic-library-mcp",
+      "repositoryUrl": "https://github.com/adriancisnerosspeed-hub/civic-library-mcp"
+    },
+    {
+      "packageName": "@swotpal/mcp-server",
+      "name": "io.github.aprilelevengo/swotpal-mcp-server",
+      "repositoryUrl": "https://github.com/aprilelevengo/swotpal-mcp-server"
+    },
+    {
+      "packageName": "@paretools/http",
+      "name": "io.github.Dave-London/pare-http",
+      "repositoryUrl": "https://github.com/Dave-London/Pare"
+    },
+    {
+      "packageName": "@opendata-kr/narajangteo-corpinfo-mcp",
+      "name": "io.github.opendata-kr/narajangteo-corpinfo",
+      "repositoryUrl": "https://github.com/opendata-kr/narajangteo-corpinfo-mcp"
+    },
+    {
+      "packageName": "aishield-mcp-server",
+      "name": "io.github.lm203688/aishield",
+      "repositoryUrl": "https://github.com/lm203688/aishield"
+    },
+    {
+      "packageName": "@fidacy/mcp",
+      "name": "io.github.lucaslubi/fidacy-mcp",
+      "repositoryUrl": "https://github.com/lucaslubi/fidacy-mcp"
+    },
+    {
+      "packageName": "@tidyports/mcp",
+      "name": "io.github.dan-fetch-studio/tidyports",
+      "repositoryUrl": "https://github.com/dan-fetch-studio/tidyports-integrations"
+    },
+    {
+      "packageName": "@ni-c/google-search-console-mcp",
+      "name": "io.github.ni-c/google-search-console-mcp",
+      "repositoryUrl": "https://github.com/ni-c/google-search-console-mcp"
+    },
+    {
+      "packageName": "agent-tasks",
+      "name": "io.github.keshrath/agent-tasks",
+      "repositoryUrl": "https://github.com/keshrath/agent-tasks"
+    },
+    {
+      "packageName": "nexus-memory-mcp",
+      "name": "io.github.KairosMobius/nexus-memory-mcp",
+      "repositoryUrl": "https://github.com/KairosMobius/nexus-memory-mcp"
+    },
+    {
+      "packageName": "qtm4j-mcp-server",
+      "name": "io.github.salehrifai42/qtm4j-mcp-server",
+      "repositoryUrl": "https://github.com/salehrifai42/qmetrymcp"
+    },
+    {
+      "packageName": "mcp-adr-analysis-server",
+      "name": "io.github.tosin2013/mcp-adr-analysis-server",
+      "repositoryUrl": "https://github.com/tosin2013/mcp-adr-analysis-server"
+    },
+    {
+      "packageName": "@oktopeak/clio-mcp",
+      "name": "io.github.oktopeak/clio-mcp",
+      "repositoryUrl": "https://github.com/oktopeak/clio-mcp"
+    },
+    {
+      "packageName": "unifi-rmcp",
+      "name": "ai.dinglebear/unifi-rmcp",
+      "repositoryUrl": "https://github.com/jmagar/unifi-rmcp"
+    },
+    {
+      "packageName": "@kryptosai/mcp-observatory",
+      "name": "io.github.KryptosAI/mcp-observatory",
+      "repositoryUrl": "https://github.com/KryptosAI/mcp-observatory"
+    },
+    {
+      "packageName": "moldsim-mcp",
+      "name": "io.github.kobzevvv/moldsim-mcp",
+      "repositoryUrl": "https://github.com/kobzevvv/moldsim-mcp"
+    },
+    {
+      "packageName": "mcp-protocol-conformance",
+      "name": "io.studiomeyer/protocol-conformance",
+      "repositoryUrl": "https://github.com/studiomeyer-io/mcp-protocol-conformance"
+    },
+    {
+      "packageName": "mcp-heimdall-scan",
+      "name": "io.github.caglarbozkurt/heimdall",
+      "repositoryUrl": "https://github.com/caglarbozkurt/mcp-heimdall"
+    },
+    {
+      "packageName": "setlist-mcp",
+      "name": "io.github.chrischall/setlist-mcp",
+      "repositoryUrl": "https://github.com/chrischall/setlist-mcp"
+    },
+    {
+      "packageName": "obsidian-sync-mcp",
+      "name": "io.github.es617/obsidian-sync-mcp",
+      "repositoryUrl": "https://github.com/es617/obsidian-sync-mcp.git"
+    },
+    {
+      "packageName": "@cyanheads/workflows-mcp-server",
+      "name": "io.github.cyanheads/workflows-mcp-server",
+      "repositoryUrl": "https://github.com/cyanheads/workflows-mcp-server"
+    },
+    {
+      "packageName": "toolradar-mcp",
+      "name": "io.github.Nadeus/toolradar",
+      "repositoryUrl": "https://github.com/Nadeus/toolradar-mcp"
+    },
+    {
+      "packageName": "@llmgraph/mcp-server",
+      "name": "io.github.abahocodes/llmgraph",
+      "repositoryUrl": "https://github.com/abahocodes/llmgraph-mcp-server"
+    },
+    {
+      "packageName": "@three-ws/scene-mcp",
+      "name": "io.github.nirholas/scene-mcp",
+      "repositoryUrl": "https://github.com/nirholas/three.ws"
+    },
+    {
+      "packageName": "@srmorete/mobile-device-mcp",
+      "name": "io.github.srmorete/mobile-device-mcp",
+      "repositoryUrl": "https://github.com/srmorete/mobile-device-mcp"
+    },
+    {
+      "packageName": "frontrun-mcp-server",
+      "name": "io.github.jongall45/frontrun-mcp-server",
+      "repositoryUrl": "https://github.com/jongall45/frontrun-mcp-server"
+    },
+    {
+      "packageName": "nextrole-mcp-proxy",
+      "name": "io.github.bats64mgutsi/nextrole-mcp-proxy",
+      "repositoryUrl": "https://github.com/bats64mgutsi/nextrole-mcp-proxy"
+    },
+    {
+      "packageName": "lorg-mcp-server",
+      "name": "io.github.LorgAI/lorg-mcp-server",
+      "repositoryUrl": "https://github.com/LorgAI/lorg-mcp-server"
+    },
+    {
+      "packageName": "agentmako",
+      "name": "io.github.drhalto/agentmako",
+      "repositoryUrl": "https://github.com/drhalto/agentmako"
+    },
+    {
+      "packageName": "bc-curriculum-mcp-server",
+      "name": "io.github.pdg6/bc-curriculum",
+      "repositoryUrl": "https://github.com/pdg6/bc-curriculum-mcp-server"
+    },
+    {
+      "packageName": "@codespar/mcp-brasil-api",
+      "name": "io.github.codespar/mcp-brasil-api",
+      "repositoryUrl": "https://github.com/codespar/mcp-dev-latam"
+    },
+    {
+      "packageName": "appstore-play-mcp",
+      "name": "io.github.JohnBilousov/appstore-play-mcp",
+      "repositoryUrl": "https://github.com/JohnBilousov/appstore-play-mcp"
+    },
+    {
+      "packageName": "@playwright/mcp",
+      "name": "io.github.microsoft/playwright-mcp",
+      "repositoryUrl": "https://github.com/microsoft/playwright-mcp"
+    },
+    {
+      "packageName": "@dmzagent/skill-builder-mcp",
+      "name": "com.dmzagent/skill-builder-mcp",
+      "repositoryUrl": "https://github.com/praeceptor-thesis/skill-builder-landing"
+    },
+    {
+      "packageName": "@dbconvert/stream-mcp",
+      "name": "com.dbconvert/streams",
+      "repositoryUrl": "https://github.com/slotix/dbconvert-streams-public"
+    },
+    {
+      "packageName": "bolor-brain-mcp",
+      "name": "io.github.photoxpedia/bolor-brain-mcp",
+      "repositoryUrl": "https://github.com/photoxpedia/bolor-brain-mcp.git"
+    },
+    {
+      "packageName": "docjet-mcp",
+      "name": "io.github.docjet-dev/docjet-mcp",
+      "repositoryUrl": "https://github.com/docjet-dev/docjet-mcp"
+    },
+    {
+      "packageName": "web2md-mcp-server",
+      "name": "org.web2md/web2md",
+      "repositoryUrl": "https://github.com/io-oi-ai/web2md"
+    },
+    {
+      "packageName": "@cliwant/mcp-sam-gov",
+      "name": "io.github.cliwant/mcp-sam-gov",
+      "repositoryUrl": "https://github.com/cliwant/mcp-sam-gov"
+    },
+    {
+      "packageName": "meta-api-mcp-server",
+      "name": "io.github.savhascelik/meta-api-mcp-server",
+      "repositoryUrl": "https://github.com/savhascelik/meta-api-mcp-server"
+    },
+    {
+      "packageName": "stylemcp",
+      "name": "io.github.3DUNLMTD/stylemcp",
+      "repositoryUrl": "https://github.com/3DUNLMTD/stylemcp"
+    },
+    {
+      "packageName": "actionproof",
+      "name": "io.github.Burakfenerci5/actionproof",
+      "repositoryUrl": "https://github.com/Burakfenerci5/actionproof"
+    },
+    {
+      "packageName": "tooldash-mcp",
+      "name": "io.github.LassiB999/tooldash-mcp",
+      "repositoryUrl": "https://github.com/LassiB999/tooldash-mcp"
+    },
+    {
+      "packageName": "@statable/mcp",
+      "name": "com.statable/analytics",
+      "repositoryUrl": "https://github.com/key-arg/statable-mcp"
+    },
+    {
+      "packageName": "@finishkit/mcp",
+      "name": "io.github.FinishKit/mcp",
+      "repositoryUrl": "https://github.com/FinishKit/mcp"
+    },
+    {
+      "packageName": "@apolloio/mcp",
+      "name": "io.github.apolloio/mcp",
+      "repositoryUrl": "https://github.com/apolloio/apollo-mcp-plugin"
+    },
+    {
+      "packageName": "seedweaver-mcp",
+      "name": "io.github.FixtureForge/seedweaver-mcp",
+      "repositoryUrl": "https://github.com/FixtureForge/seedweaver-mcp"
+    },
+    {
+      "packageName": "@mcplookup/mcp",
+      "name": "com.mcplookup/mcp",
+      "repositoryUrl": "https://github.com/mcplookupdev/mcplookup-mcp"
+    },
+    {
+      "packageName": "@retain-so/mcp-server",
+      "name": "io.github.retain-so/mcp-server",
+      "repositoryUrl": "https://github.com/retain-so/mcp-server"
+    },
+    {
+      "packageName": "@rog0x/mcp-math-tools",
+      "name": "io.github.rog0x/math",
+      "repositoryUrl": "https://github.com/rog0x/mcp-math-tools"
+    },
+    {
+      "packageName": "mcp-docker-server",
+      "name": "io.github.ofershap/docker",
+      "repositoryUrl": "https://github.com/ofershap/mcp-server-docker"
+    },
+    {
+      "packageName": "@aernoud/facetimemcp",
+      "name": "io.github.aernouddekker/facetimemcp",
+      "repositoryUrl": "https://github.com/aernouddekker/macos-mcp"
+    },
+    {
+      "packageName": "@ansvar/uruguayan-law-mcp",
+      "name": "eu.ansvar/uruguayan-law-mcp",
+      "repositoryUrl": "https://github.com/Ansvar-Systems/Uruguayan-law-mcp"
+    },
+    {
+      "packageName": "recipe-commerce-mcp",
+      "name": "io.github.teamsincetoday/recipe-commerce-mcp",
+      "repositoryUrl": "https://github.com/teamsincetoday/recipe-commerce-mcp"
+    },
+    {
+      "packageName": "@cyanheads/medical-codes-mcp-server",
+      "name": "io.github.cyanheads/medical-codes-mcp-server",
+      "repositoryUrl": "https://github.com/cyanheads/medical-codes-mcp-server"
+    },
+    {
+      "packageName": "@agirails/mcp-server",
+      "name": "io.github.Unima3x/agirails-mcp-server",
+      "repositoryUrl": "https://github.com/agirails/agirails-mcp-server"
+    },
+    {
+      "packageName": "@unclick/exchangerate-mcp",
+      "name": "io.github.malamutemayhem/exchangerate",
+      "repositoryUrl": "https://github.com/malamutemayhem/unclick.git"
+    },
+    {
+      "packageName": "@klever/mcp-server",
+      "name": "io.github.klever-io/mcp-klever-vm",
+      "repositoryUrl": "https://github.com/klever-io/mcp-klever-vm"
+    },
+    {
+      "packageName": "@numeratica/mcp",
+      "name": "com.numeratica/mcp",
+      "repositoryUrl": "https://github.com/numeratica/mcp"
+    },
+    {
+      "packageName": "@ahmednsh/searchapi-mcp-server",
+      "name": "io.github.Ahmednsh/searchapi-mcp-server",
+      "repositoryUrl": "https://github.com/Ahmednsh/searchapi-mcp-server"
+    },
+    {
+      "packageName": "@runapi.ai/seedance-mcp",
+      "name": "io.github.runapi-builder/seedance-mcp",
+      "repositoryUrl": "https://github.com/runapi-ai/seedance-mcp"
+    },
+    {
+      "packageName": "@marcelo-ochoa/server-mikrotik",
+      "name": "io.github.marcelo-ochoa/mikrotik",
+      "repositoryUrl": "https://github.com/marcelo-ochoa/servers"
+    },
+    {
+      "packageName": "@wasmagent/mcp-server",
+      "name": "io.github.telleroutlook/mcp-server",
+      "repositoryUrl": "https://github.com/WasmAgent/wasmagent-js"
+    },
+    {
+      "packageName": "@sylphx/pdf-reader-mcp",
+      "name": "io.github.SylphxAI/pdf-reader-mcp",
+      "repositoryUrl": "https://github.com/SylphxAI/pdf-reader-mcp"
+    }
+  ]
+}
