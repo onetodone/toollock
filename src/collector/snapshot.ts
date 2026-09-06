@@ -2,6 +2,7 @@ import { capture } from "../mcp/capture.js";
 import { connect, killTransport, npxServerSpec } from "../mcp/connect.js";
 import { computePromptHashes, computeToolHashes } from "../schema/hash.js";
 import { computeServerTokenCounts } from "../schema/tokens.js";
+import { measureSpawnStability, type HashPair } from "./determinism.js";
 
 export type SeedBucket = "list-open" | "list-env-gated" | "list-auth-required" | "list-timeout";
 
@@ -51,6 +52,17 @@ export interface ServerSnapshot {
   contextBudget?: number | null;
   refCount?: number;
   schemaReuseRatio?: number | null;
+  /**
+   * Did an immediate second spawn produce byte-identical tool/prompt
+   * hashes? Measured per server (one extra spawn), not inferred from the
+   * bucket — `docs/findings/2026-09-06-sentry-proxy-instability.md`,
+   * DECISIONS.md #20. `null` when the recheck spawn failed; absent for
+   * servers that were never captured (`list-auth-required`/
+   * `list-timeout`, or `error`).
+   */
+  stableAcrossSpawns?: boolean | null;
+  /** What differed between the two spawns (or why stability couldn't be measured). Omitted when `stableAcrossSpawns` is `true`. */
+  spawnVariance?: string[];
   error?: string;
 }
 
@@ -77,13 +89,16 @@ export async function snapshotServer(spec: SeedServerSpec): Promise<ServerSnapsh
   }
 
   try {
+    let tools: ToolRecord[] = [];
+    let prompts: PromptRecord[] = [];
+    let snapshot: ServerSnapshot;
     const server = await connect({ ...npxServerSpec(spec.package, spec.spawnArgs ?? []), env: spec.promotionEnv });
     try {
       const result = await capture(server);
       const tokenCounts = computeServerTokenCounts(result.tools, result.wireTools.raw);
       const tokensByName = new Map(tokenCounts.perTool.map((t) => [t.name, t]));
 
-      const tools: ToolRecord[] = result.tools.map((tool) => {
+      tools = result.tools.map((tool) => {
         const hashes = computeToolHashes(tool);
         const tokens = tokensByName.get(tool.name);
         if (!tokens) {
@@ -100,12 +115,12 @@ export async function snapshotServer(spec: SeedServerSpec): Promise<ServerSnapsh
         };
       });
 
-      const prompts: PromptRecord[] = (result.prompts ?? []).map((prompt) => {
+      prompts = (result.prompts ?? []).map((prompt) => {
         const hashes = computePromptHashes(prompt);
         return { name: prompt.name, schemaHash: hashes.schemaHash, promptHash: hashes.promptHash };
       });
 
-      return {
+      snapshot = {
         ...base,
         tools,
         prompts,
@@ -120,6 +135,12 @@ export async function snapshotServer(spec: SeedServerSpec): Promise<ServerSnapsh
     } finally {
       killTransport(server.transport);
     }
+
+    const toHashMap = (records: Array<{ name: string } & HashPair>): Map<string, HashPair> =>
+      new Map(records.map((r) => [r.name, { schemaHash: r.schemaHash, promptHash: r.promptHash }]));
+    const stability = await measureSpawnStability(spec, { tools: toHashMap(tools), prompts: toHashMap(prompts) });
+
+    return { ...snapshot, ...stability };
   } catch (err) {
     return { ...base, error: err instanceof Error ? err.message : String(err) };
   }
