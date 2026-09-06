@@ -23,10 +23,54 @@
  *
  * Usage: npx tsx scripts/snapshot-registry.ts
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { checkAllNpmCriteria, summarizeCuration } from "../src/collector/curate.js";
 import { fetchAllRegistryEntries, summarizeRegistry } from "../src/collector/registry.js";
+
+interface RegistrySnapshotShape {
+  date: string;
+  tally: { latestEntries: number; byRegistryType: Record<string, number> };
+  curation: { totalNpmCandidates: number; survivorCount: number };
+}
+
+function delta(from: number, to: number, days: number) {
+  return { from, to, delta: to - from, perDay: days > 0 ? Number(((to - from) / days).toFixed(1)) : null };
+}
+
+/**
+ * Growth since the previous dated registry snapshot. Free now that
+ * there are two dated crawls — the registry's growth rate is a dataset
+ * finding in its own right (it grew 322 latest servers between the first
+ * two crawls, a day apart). `null` on the first-ever crawl.
+ */
+function growthSincePrevious(outDir: string, today: string, currentTally: RegistrySnapshotShape["tally"], currentSurvivors: number, currentNpmCandidates: number) {
+  if (!existsSync(outDir)) return null;
+  const priorDate = readdirSync(outDir)
+    .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+    .map((f) => f.slice(0, 10))
+    .filter((d) => d < today)
+    .sort()
+    .at(-1);
+  if (!priorDate) return null;
+
+  const prior = JSON.parse(readFileSync(path.join(outDir, `${priorDate}.json`), "utf8")) as RegistrySnapshotShape;
+  const days = (Date.parse(today) - Date.parse(prior.date)) / 86_400_000;
+
+  const byRegistryType: Record<string, ReturnType<typeof delta>> = {};
+  for (const key of new Set([...Object.keys(prior.tally.byRegistryType), ...Object.keys(currentTally.byRegistryType)])) {
+    byRegistryType[key] = delta(prior.tally.byRegistryType[key] ?? 0, currentTally.byRegistryType[key] ?? 0, days);
+  }
+
+  return {
+    previousDate: prior.date,
+    days,
+    latestEntries: delta(prior.tally.latestEntries, currentTally.latestEntries, days),
+    npmCandidates: delta(prior.curation.totalNpmCandidates, currentNpmCandidates, days),
+    survivors: delta(prior.curation.survivorCount, currentSurvivors, days),
+    byRegistryType,
+  };
+}
 
 async function main() {
   console.log("Fetching the full MCP registry (registry.modelcontextprotocol.io/v0/servers)...");
@@ -73,6 +117,15 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, `${date}.json`);
 
+  const growth = growthSincePrevious(outDir, date, tally, curation.survivors.length, curation.totalCandidates);
+  if (growth) {
+    console.log(
+      `Growth since ${growth.previousDate} (${growth.days}d): latest ${growth.latestEntries.delta >= 0 ? "+" : ""}${growth.latestEntries.delta} ` +
+        `(${growth.latestEntries.perDay}/day), npm candidates ${growth.npmCandidates.delta >= 0 ? "+" : ""}${growth.npmCandidates.delta}, ` +
+        `survivors ${growth.survivors.delta >= 0 ? "+" : ""}${growth.survivors.delta}.`,
+    );
+  }
+
   const snapshot = {
     date,
     capturedAt: new Date().toISOString(),
@@ -87,6 +140,7 @@ async function main() {
       failedRepository: curation.failedRepository,
       survivorCount: curation.survivors.length,
     },
+    growthSincePrevious: growth,
   };
   writeFileSync(outPath, `${JSON.stringify(snapshot, null, 2)}\n`);
   console.log(`Wrote ${outPath}`);
