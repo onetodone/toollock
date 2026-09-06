@@ -209,11 +209,16 @@ what's genuinely still unresolved.
   — inert during active development, but worth a line in Phase 6's
   operational notes once commit cadence drops to weekly and the
   collector's own commits are the only thing resetting that timer.
-- Phase 5's seed-list expansion needs its own selection method beyond
-  DECISIONS.md #17's curation bar — the real npm-candidate pool is 8,186
-  (7,745 survive curation), not the small number the "50-60 candidates"
-  target seems to have assumed. Not designed here; flagged in
-  DECISIONS.md #17/#18 for whoever scopes Phase 5.
+- Phase 5's seed-list **selection method is now decided** (DECISIONS.md
+  #17): a seeded pseudorandom draw over the ~7,745 curation-bar
+  survivors, survivor list pinned as a data artifact, seed recorded in
+  `data/seed-list.json`. Still to build in Phase 5: the draw itself, the
+  bucket probe over the drawn sample, and drift computation across
+  consecutive snapshots. Note for that last one: the first real drift
+  count will almost certainly be zero (only two snapshots exist,
+  `2026-09-05`/`2026-09-06`) — that is the correct baseline, to be
+  confirmed against a hand-diff and recorded, not a bug to chase
+  (PLAN.md Phase 5).
 
 ## Do not retry
 

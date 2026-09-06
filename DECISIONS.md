@@ -847,8 +847,43 @@ well-formed," not "is this worth including in a curated dataset" — those
 turned out to be different questions. Recorded here rather than treated
 as a bug in the bar: **metadata-based quality signals don't separate
 signal from noise in this ecosystem.** Phase 5's selection method (see
-below, and PLAN.md's Phase 5 section) needs to account for this rather
-than assume a stronger curation bar would fix it.
+below) has to account for this rather than assume a stronger curation
+bar would fix it.
+
+**Phase 5's selection method, decided before its code: a seeded random
+draw, not a ranking.** The bar leaves ~7,745 survivors; the target is
+50–60; something has to pick the ~40–50 added to v1's 10. Every
+*ranking* option (download count, GitHub stars, registry recency, name
+heuristics) has the same three problems: it's a quality claim that has
+to be defended, it's gameable, and it makes the seed list look
+hand-picked for a flattering result. A **seeded pseudorandom sample**
+makes no quality claim at all — it only has to be *reproducible*, which
+is a mechanical property, not a judgment. Anyone can re-run the draw and
+get the identical list, or draw an independent sample under a different
+seed and check the dataset's findings still hold. Concretely:
+
+- The draw is over the survivor list sorted by registry `name`, pinned
+  as a data artifact at draw time (`data/registry/<date>-survivors.json`,
+  names only — the registry moves, so the draw only reproduces against
+  the exact list it was drawn from, never a later re-crawl). This is the
+  one place decision #18's "counts only, the raw list is reproducible
+  from a re-run" doesn't hold — a reproducible *draw* needs the list
+  pinned, so Phase 5 persists it.
+- A named, seeded PRNG (no dependency — a small deterministic one such as
+  `xmur3` seeding `mulberry32`; the implementation fixes the choice)
+  shuffles that list. The probe walks the shuffle in order, keeping each
+  server that lands `list-open` or promotes to `list-env-gated`, until
+  the seed list reaches its target size — so a run of
+  `list-auth-required`/`list-timeout` draws doesn't leave it short, and
+  the walk order stays deterministic.
+- `data/seed-list.json` records the seed value, the PRNG name, the
+  survivor file it drew from and that file's content hash, and the draw
+  date — everything needed to reproduce the exact sample.
+
+End to end the seed list stays mechanically reproducible: registry crawl
+→ curation bar (recorded drop counts) → pinned survivor list → seeded
+draw (recorded seed) → bucket probe. No step is a judgment call — the
+same standard decisions #12 and #17's bar already hold themselves to.
 
 ## 18. Dataset file layout, and v1's seed list is 10 servers by design
 
