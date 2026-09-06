@@ -14,7 +14,9 @@
     "test": "node --import tsx --test src/**/*.test.ts",
     "check:hash-determinism": "tsx scripts/check-hash-determinism.ts",
     "collect": "tsx scripts/run-collector.ts",
-    "snapshot:registry": "tsx scripts/snapshot-registry.ts"
+    "snapshot:registry": "tsx scripts/snapshot-registry.ts",
+    "draw:seed-candidates": "tsx scripts/draw-seed-candidates.ts",
+    "probe:seed-candidates": "tsx scripts/probe-seed-candidates.ts"
   },
   "engines": {
     "node": ">=20"

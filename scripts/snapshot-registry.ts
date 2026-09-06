@@ -90,6 +90,26 @@ async function main() {
   };
   writeFileSync(outPath, `${JSON.stringify(snapshot, null, 2)}\n`);
   console.log(`Wrote ${outPath}`);
+
+  // The pinned survivor list — decision #17's Phase 5 addition. The
+  // registry moves, so a reproducible seeded draw (decision #17) has to
+  // run against the exact list it was drawn from, not a later re-crawl.
+  // Sorted by packageName for a stable order the draw's shuffle is a
+  // deterministic function of. Kept as its own file (decision #18): a
+  // ~7,700-entry array is large, but it's write-once and rarely changes.
+  const byPackage = new Map(npmCandidates.map((c) => [c.packageName, c]));
+  const survivors = [...curation.survivors]
+    .sort((a, b) => a.localeCompare(b))
+    .map((packageName) => {
+      const c = byPackage.get(packageName);
+      return { packageName, name: c?.name ?? null, repositoryUrl: c?.repositoryUrl ?? null };
+    });
+  const survivorsPath = path.join(outDir, `${date}-survivors.json`);
+  writeFileSync(
+    survivorsPath,
+    `${JSON.stringify({ date, sourceSnapshot: `${date}.json`, count: survivors.length, survivors }, null, 2)}\n`,
+  );
+  console.log(`Wrote ${survivorsPath} (${survivors.length} survivors)`);
 }
 
 main().catch((err) => {
