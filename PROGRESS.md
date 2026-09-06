@@ -2,26 +2,32 @@
 
 ## Current state
 
-**Phase 4 is complete; Phase 5 is next.** `toollock init`/`verify`/
-`update` are real and working end to end: `init` captures a server and
-writes `tools.lock` (sorted keys, deterministic — a no-op re-run is
-byte-identical); `verify` re-captures and classifies drift into
-DECISIONS.md #7's four classes, exiting 1 on schema-breaking/
-prompt-drift and never writing the file; `update` shows the same
-findings and rewrites. Phase 4 added `toollock budget` (the context-tax
-table, built from `wireTokens` — proven against
-`@notionhq/notion-mcp-server` at 17,500 wire tokens / schemaReuseRatio
-3.52, byte-matching the README headline), hardened the drift classifier
-(rename detection, `enum` widening/narrowing, `annotations` drift — the
-last closing a DECISIONS.md Known-limitation gap), shipped
-`.github/workflows/toollock-verify.yml.example` with a YAML lint test,
-and gave DECISIONS.md #1/#2/#4/#8/#9 their real reasoning (the Snyk
-Agent Scan / mcp-scan positioning paragraph included). The first
-unattended scheduled collector run also fired during this phase
-(2026-09-06, commit `7d99cd3`). Phase 5 owns drift-over-time across
-snapshots and seed-list expansion. See `docs/spikes/phase-0.md` for
-Phase 0's spike notes and the Phase log below for how each phase
-concluded.
+**Phase 4 is complete; Phase 5 is in progress.** `toollock init`/
+`verify`/`update`/`budget` are real and working end to end (see the
+Phase 4 log below). Phase 5 so far: **drift computation across
+consecutive snapshots is built** (`src/collector/drift.ts` —
+hash-and-set comparison on the records the snapshot already stores, no
+re-capture), the collector's commit message gains a **bucket-broken-out**
+drift count (`data: snapshot <date> (<N> servers, 1 drifted — 1
+list-env-gated)`, DECISIONS.md #20), and each capturable server now gets
+a measured **`stableAcrossSpawns`** field (one extra spawn,
+`src/collector/determinism.ts`). What's left in Phase 5: seed-list
+expansion — the seeded pseudorandom draw over the ~7,745 curation-bar
+survivors (method decided, DECISIONS.md #17) and the bucket probe over
+the drawn sample.
+
+**The dataset produced its first real measurement, and it's a finding:**
+`@sentry/mcp-server@0.39.0` returned 9 → 22 → 9 tools within 24h at a
+static version (`docs/findings/2026-09-06-sentry-proxy-instability.md`).
+It's a proxy — `tools/list` forwards to a hosted backend — so its tool
+list isn't a function of the npm package, which breaks the lockfile's
+same-input-same-output premise for that class of server. Drove
+DECISIONS.md #20 and a new Known-limitation entry. The 2026-09-05 →
+2026-09-06 drift is therefore 1 (one `list-env-gated` server), not the
+zero that was predicted — and `drift.test.ts` pins that.
+
+See `docs/spikes/phase-0.md` for Phase 0's spike notes and the Phase log
+below for how each phase concluded.
 
 ## Phase log
 
@@ -209,16 +215,22 @@ what's genuinely still unresolved.
   — inert during active development, but worth a line in Phase 6's
   operational notes once commit cadence drops to weekly and the
   collector's own commits are the only thing resetting that timer.
-- Phase 5's seed-list **selection method is now decided** (DECISIONS.md
-  #17): a seeded pseudorandom draw over the ~7,745 curation-bar
-  survivors, survivor list pinned as a data artifact, seed recorded in
-  `data/seed-list.json`. Still to build in Phase 5: the draw itself, the
-  bucket probe over the drawn sample, and drift computation across
-  consecutive snapshots. Note for that last one: the first real drift
-  count will almost certainly be zero (only two snapshots exist,
-  `2026-09-05`/`2026-09-06`) — that is the correct baseline, to be
-  confirmed against a hand-diff and recorded, not a bug to chase
-  (PLAN.md Phase 5).
+- Phase 5's seed-list **selection method is decided** (DECISIONS.md #17):
+  a seeded pseudorandom draw over the ~7,745 curation-bar survivors,
+  survivor list pinned as a data artifact, seed recorded in
+  `data/seed-list.json`. **Still to build:** the draw itself and the
+  bucket probe over the drawn sample. (Drift computation and
+  `stableAcrossSpawns` — the other Phase 5 pieces — are done.)
+- **Proxy servers and the next scheduled runs.** `sentry-mcp-server` will
+  likely show drift on most runs until its backend stabilises (each run
+  compares against whatever tool count the previous run happened to
+  catch). That's expected and the bucket breakout keeps it legible in
+  the commit log — a `list-env-gated`-only drift count is noise, a
+  `list-open` one is signal. If a `list-open` server ever shows drift,
+  hand-diff the two snapshots before trusting the classifier
+  (`src/collector/drift.ts` is hash-level only — it says *that* a hash
+  moved, not *what* changed; that detail needs `tools.lock`-style full
+  records, which the dataset doesn't store).
 
 ## Do not retry
 

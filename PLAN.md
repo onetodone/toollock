@@ -300,14 +300,22 @@ Builds on Phase 2.5's already-running collector.
 
 **Deliverables:** drift computation across consecutive snapshots (reusing
 Phase 2's hash comparison); the commit-message format gains the drift
-count — `data: snapshot <ISO date> (<N> servers, <M> drifted)` — **still
-daily, still no "weekly"** (see Phase 2.5's cadence note; the flip to
-weekly is a Phase 6 step, not this one); seed list expanded toward 50–60
+count, **broken out by bucket** — `data: snapshot <ISO date> (<N>
+servers, <M> drifted — <n> list-open, <n> list-env-gated)`, decision #20
+— **still daily, still no "weekly"** (see Phase 2.5's cadence note; the
+flip to weekly is a Phase 6 step, not this one); a per-server
+`stableAcrossSpawns` field measured during collection (decision #20,
+`src/collector/determinism.ts` — done); seed list expanded toward 50–60
 candidates (all auto-probed `list-open` servers kept; up to 5
 `list-auth-required` servers promoted to `list-env-gated` via the
 timeboxed hand-research path, `sentry-mcp-server` first — see
 DECISIONS.md #12); the bucket column, the `list-env-gated` caveat flag,
 and `list-timeout` counts recorded per dataset entry.
+
+**Status:** drift computation + `stableAcrossSpawns` + the bucket-broken-out
+commit message are built and tested (`src/collector/drift.ts`,
+`src/collector/determinism.ts`). Seed-list expansion (the seeded draw,
+the probe over the sample) is what's left.
 
 **Selection method — decided, see DECISIONS.md #17:** a seeded
 pseudorandom draw over the ~7,745 curation-bar survivors, not a ranking.
@@ -319,23 +327,25 @@ different seed can be used to sanity-check the dataset's findings. The
 probe walks the seeded shuffle in order, keeping `list-open` and
 promoted `list-env-gated` servers until the list hits its target size.
 
-**First drift count will almost certainly be zero — that is the correct
-answer, not a bug.** With only two snapshots when drift computation
-lands (`2026-09-05`, `2026-09-06`), the seed list's own servers are
-unlikely to have moved a hash in 24h. Before assuming the implementation
-is broken, verify against a hand-diff of the two snapshot files. Record
-the zero as the dataset's first real drift data point — it is the
-baseline every later count is read against, not a placeholder to
-suppress.
+**The first drift count turned out to be 1, not 0 — and it's real.** The
+prediction here was zero (two snapshots a day apart, stable servers).
+The hand-diff (`docs/findings/2026-09-06-sentry-proxy-instability.md`)
+found exactly one drifted server: `sentry-mcp-server`, a `list-env-gated`
+proxy that returned 9 tools on 09-05 and 22 on 09-06 at a static package
+version. That is not a bug — it's the dataset's first real finding, and
+it drove decision #20 (the `stableAcrossSpawns` field and the
+bucket-broken-out count). `drift.test.ts` pins this exact result.
+Whatever the next scheduled run reports, confirm it against a hand-diff
+before trusting or doubting it; a `list-env-gated`-only drift count is
+expected noise, a `list-open` one is the signal.
 
 **Definition of done:** a scheduled run's commit message shows a real
-drift count computed against the previous snapshot (zero is a real
-count, if a hand-diff of the two snapshots confirms it); the seed list
-documents each server's bucket, the seeded-draw parameters, and links
-the pinned survivor list.
-**Test:** trigger two consecutive runs (or replay two saved snapshots) and
-confirm the drift count in the resulting commit message matches a hand
-count of changed hashes — including confirming a zero is genuinely zero.
+drift count computed against the previous snapshot, broken out by bucket;
+the seed list documents each server's bucket, the seeded-draw parameters,
+and links the pinned survivor list.
+**Test:** replay two saved snapshots and confirm the drift count matches
+a hand count of changed hashes (done for `2026-09-05`→`2026-09-06` in
+`src/collector/drift.test.ts`); then a real scheduled run.
 
 ## Phase 6 — Polish for a 10-second-to-2-minute reviewer pass (~1 day)
 
