@@ -2,18 +2,26 @@
 
 ## Current state
 
-**Phase 3 is complete; Phase 4 is next.** `toollock init`/`verify`/
+**Phase 4 is complete; Phase 5 is next.** `toollock init`/`verify`/
 `update` are real and working end to end: `init` captures a server and
 writes `tools.lock` (sorted keys, deterministic — a no-op re-run is
 byte-identical); `verify` re-captures and classifies drift into
 DECISIONS.md #7's four classes, exiting 1 on schema-breaking/
 prompt-drift and never writing the file; `update` shows the same
-findings and rewrites. Manually smoke-tested against a real package
-(`@modelcontextprotocol/server-memory`) and proven end-to-end against a
-local fixture server in `src/lock/e2e.test.ts`. `budget`/CI-usability
-polish and the classifier's known edge cases are Phase 4. See
-`docs/spikes/phase-0.md` for Phase 0's spike notes and the Phase log
-below for how each phase concluded.
+findings and rewrites. Phase 4 added `toollock budget` (the context-tax
+table, built from `wireTokens` — proven against
+`@notionhq/notion-mcp-server` at 17,500 wire tokens / schemaReuseRatio
+3.52, byte-matching the README headline), hardened the drift classifier
+(rename detection, `enum` widening/narrowing, `annotations` drift — the
+last closing a DECISIONS.md Known-limitation gap), shipped
+`.github/workflows/toollock-verify.yml.example` with a YAML lint test,
+and gave DECISIONS.md #1/#2/#4/#8/#9 their real reasoning (the Snyk
+Agent Scan / mcp-scan positioning paragraph included). The first
+unattended scheduled collector run also fired during this phase
+(2026-09-06, commit `7d99cd3`). Phase 5 owns drift-over-time across
+snapshots and seed-list expansion. See `docs/spikes/phase-0.md` for
+Phase 0's spike notes and the Phase log below for how each phase
+concluded.
 
 ## Phase log
 
@@ -148,6 +156,38 @@ below for how each phase concluded.
   all yet, a real remaining gap recorded in Known limitations, not
   silently left for someone to discover.
 
+- **Phase 4 (drift classifier polish + `budget` + CI usability) —
+  complete.** 2026-09-06. Commits: `19bab93` (classifier edge cases —
+  rename detection, `enum` drift, `annotations`), `e428b7a` (`toollock
+  budget`), `6506083` (example consumer workflow + YAML lint test),
+  `705171e` (DECISIONS.md #1/#2/#4/#8/#9). Verified by: `npm test` — 100
+  tests, all passing (up from 80 at Phase 3's close; +20 covering the
+  new classifier cases, `budget`'s formatting, both workflow files
+  parsing under the `yaml` package, and two new spawned-fixture e2e
+  cases — a real rename and a real `budget` run); `budget` run for real
+  via the built CLI against `@notionhq/notion-mcp-server` (24 tools,
+  **17,500 wire tokens — byte-identical to the README's headline and
+  DECISIONS.md #5's figures**, `schemaReuseRatio` 3.52, 152 `$ref`s) and
+  `@modelcontextprotocol/server-everything` (13 tools, 1,708), each
+  printing a sane sorted table — Phase 4's own Definition of Done.
+  `required[]` widened-vs-narrowed (a PLAN.md Phase 4 named case) turned
+  out to have been fully handled in Phase 3 already — Phase 4 added
+  explicit tests for it, not new code. The `annotations` gap DECISIONS.md
+  flagged for "Phase 4's classifier-edge-case pass" is closed:
+  `LockedTool` gained an `annotations` field, populated by `build.ts`,
+  compared (JCS, so key-order isn't drift) by the classifier as
+  `prompt-drift`. One layout bug caught in a visual check before the
+  `budget` commit, not after: the `(framing)` row misaligned whenever its
+  label was wider than the tool-name column — fixed by folding the
+  literal row labels into the column-width computation rather than
+  sizing on tool names alone.
+  Also during this phase, unrelated to its deliverables: the first
+  unattended `schedule`-triggered collector run fired
+  (`gh run` `34027191061`, 2026-09-06T10:21Z — ~4h after the `0 6 * * *`
+  cron slot, GitHub's usual scheduled-queue lag), committing `7d99cd3`
+  "data: snapshot 2026-09-06 (10 servers)" touching only `data/`. Phase 4
+  work was rebased onto it. This resolves the Phase 2.5 open thread below.
+
 ## Open threads
 
 Resolution narrative for each Phase 0 spike lives in
@@ -160,16 +200,15 @@ what's genuinely still unresolved.
   server misclassified as `list-auth-required`) was checked for across
   Phase 0 spike 3's 10 candidates and not observed — stays open for the
   larger Phase 5 seed list, where it hasn't been ruled out.
-- `collect.yml` is live and armed (pushed 2026-09-05), but an actual
-  unattended `schedule` fire hasn't been observed yet — the first
-  scheduled run is the thing to check next (`gh run list --workflow
-  collect.yml`), not a re-test of the mechanism, which Phase 0 spike 6
-  already confirmed via `workflow_dispatch` (identity, permissions
-  override, scoped diff, non-cross-triggering all real). A related
-  constraint to carry in: GitHub disables a public repo's scheduled
-  workflow after 60 days with no new commits (DECISIONS.md #11) — inert
-  during active development, but worth a line in Phase 2.5/6's
-  operational notes once commit cadence drops to weekly.
+- ~~`collect.yml`'s first unattended `schedule` fire hasn't been observed
+  yet.~~ **Observed 2026-09-06** (run `34027191061`, commit `7d99cd3`,
+  scoped to `data/`, bot identity — all as designed). The mechanism is
+  now proven both ways (spike 6's `workflow_dispatch` and this real
+  scheduled run). Still to carry forward: GitHub disables a public repo's
+  scheduled workflow after 60 days with no new commits (DECISIONS.md #11)
+  — inert during active development, but worth a line in Phase 6's
+  operational notes once commit cadence drops to weekly and the
+  collector's own commits are the only thing resetting that timer.
 - Phase 5's seed-list expansion needs its own selection method beyond
   DECISIONS.md #17's curation bar — the real npm-candidate pool is 8,186
   (7,745 survive curation), not the small number the "50-60 candidates"
