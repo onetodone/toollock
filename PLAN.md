@@ -305,12 +305,24 @@ servers, <M> drifted — <n> list-open, <n> list-env-gated)`, decision #20
 — **still daily, still no "weekly"** (see Phase 2.5's cadence note; the
 flip to weekly is a Phase 6 step, not this one); a per-server
 `stableAcrossSpawns` field measured during collection (decision #20,
-`src/collector/determinism.ts` — done); seed list expanded toward 50–60
-candidates (all auto-probed `list-open` servers kept; up to 5
-`list-auth-required` servers promoted to `list-env-gated` via the
-timeboxed hand-research path, `sentry-mcp-server` first — see
-DECISIONS.md #12); the bucket column, the `list-env-gated` caveat flag,
-and `list-timeout` counts recorded per dataset entry.
+`src/collector/determinism.ts` — done); seed list expanded via a seeded
+random draw with every auto-probed `list-open` server kept (decision
+#17); the bucket column, the `list-env-gated` caveat flag, and
+`list-timeout` counts recorded per dataset entry; a
+`deltaSincePreviousCrawl` field on the registry snapshot (difference
+between two dated crawls — **a delta, not a rate**: two points can't
+support "+322/day ⇒ 6x/year"; it becomes a rate once there's a series).
+
+**Deferred (not unfinished): the ≤5 `list-auth-required` → `list-env-gated`
+hand-promotions.** This was the "if time permits" item and Phase 5's
+one-day budget was spent on drift computation, `stableAcrossSpawns`, the
+Sentry finding, the seeded draw, and the batch probe. The
+curated-vs-random contrast across 100 servers is the result and doesn't
+get stronger from five servers moving buckets by hand — the
+`list-auth-required` count *is* the finding, and promoting servers out
+of it only shrinks it. Available later as a bounded task
+(`sentry-mcp-server` and `server-brave-search` are already promoted in
+v1's 10).
 
 **Status:** drift computation + `stableAcrossSpawns` + the bucket-broken-out
 commit message are built and tested (`src/collector/drift.ts`,
@@ -321,8 +333,9 @@ probe) and the batch probe (`src/collector/probe.ts`,
 `scripts/probe-seed-candidates.ts`, run via
 `.github/workflows/probe-seed-candidates.yml`, `workflow_dispatch`
 only). What's left: run the probe, build the final seed list from its
-`list-open` results, hand-promote ≤5 `list-auth-required` to
-`list-env-gated`, and record the outcome distribution as a finding.
+`list-open` results, and record the outcome distribution as a finding
+(curated-vs-random the headline). Then stop and take stock before
+Phase 6.
 
 **Selection method — decided, see DECISIONS.md #17:** a seeded
 pseudorandom draw over the curation-bar survivors, not a ranking. The

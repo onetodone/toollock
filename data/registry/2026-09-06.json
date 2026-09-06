@@ -27,63 +27,55 @@
     "failedRepository": 413,
     "survivorCount": 7784
   },
-  "growthSincePrevious": {
+  "deltaSincePreviousCrawl": {
+    "note": "delta between two dated crawls, not a rate — a rate needs a series (see snapshot-registry.ts)",
     "previousDate": "2026-09-05",
-    "days": 1,
+    "daysBetweenCrawls": 1,
     "latestEntries": {
       "from": 27231,
       "to": 27553,
-      "delta": 322,
-      "perDay": 322
+      "delta": 322
     },
     "npmCandidates": {
       "from": 8186,
       "to": 8232,
-      "delta": 46,
-      "perDay": 46
+      "delta": 46
     },
     "survivors": {
       "from": 7745,
       "to": 7784,
-      "delta": 39,
-      "perDay": 39
+      "delta": 39
     },
     "byRegistryType": {
       "npm": {
         "from": 8186,
         "to": 8232,
-        "delta": 46,
-        "perDay": 46
+        "delta": 46
       },
       "oci": {
         "from": 856,
         "to": 861,
-        "delta": 5,
-        "perDay": 5
+        "delta": 5
       },
       "pypi": {
         "from": 3561,
         "to": 3593,
-        "delta": 32,
-        "perDay": 32
+        "delta": 32
       },
       "mcpb": {
         "from": 674,
         "to": 699,
-        "delta": 25,
-        "perDay": 25
+        "delta": 25
       },
       "nuget": {
         "from": 107,
         "to": 107,
-        "delta": 0,
-        "perDay": 0
+        "delta": 0
       },
       "cargo": {
         "from": 43,
         "to": 43,
-        "delta": 0,
-        "perDay": 0
+        "delta": 0
       }
     }
   }

@@ -34,17 +34,20 @@ interface RegistrySnapshotShape {
   curation: { totalNpmCandidates: number; survivorCount: number };
 }
 
-function delta(from: number, to: number, days: number) {
-  return { from, to, delta: to - from, perDay: days > 0 ? Number(((to - from) / days).toFixed(1)) : null };
+function delta(from: number, to: number) {
+  return { from, to, delta: to - from };
 }
 
 /**
- * Growth since the previous dated registry snapshot. Free now that
- * there are two dated crawls — the registry's growth rate is a dataset
- * finding in its own right (it grew 322 latest servers between the first
- * two crawls, a day apart). `null` on the first-ever crawl.
+ * The difference between this crawl and the most recent earlier one —
+ * a *delta between two dated points*, not a rate. Two crawls give one
+ * difference; calling +322 in a day "1.2%/day" implies ~6x annual
+ * growth, which isn't a claim two points can support. This becomes a
+ * rate once there's a week-plus series to fit one to. `null` on the
+ * first-ever crawl. The `days` gap is recorded so a later consumer can
+ * derive a rate from the series without re-reading dates.
  */
-function growthSincePrevious(outDir: string, today: string, currentTally: RegistrySnapshotShape["tally"], currentSurvivors: number, currentNpmCandidates: number) {
+function deltaSincePreviousCrawl(outDir: string, today: string, currentTally: RegistrySnapshotShape["tally"], currentSurvivors: number, currentNpmCandidates: number) {
   if (!existsSync(outDir)) return null;
   const priorDate = readdirSync(outDir)
     .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
@@ -55,19 +58,20 @@ function growthSincePrevious(outDir: string, today: string, currentTally: Regist
   if (!priorDate) return null;
 
   const prior = JSON.parse(readFileSync(path.join(outDir, `${priorDate}.json`), "utf8")) as RegistrySnapshotShape;
-  const days = (Date.parse(today) - Date.parse(prior.date)) / 86_400_000;
+  const daysBetweenCrawls = Math.round((Date.parse(today) - Date.parse(prior.date)) / 86_400_000);
 
   const byRegistryType: Record<string, ReturnType<typeof delta>> = {};
   for (const key of new Set([...Object.keys(prior.tally.byRegistryType), ...Object.keys(currentTally.byRegistryType)])) {
-    byRegistryType[key] = delta(prior.tally.byRegistryType[key] ?? 0, currentTally.byRegistryType[key] ?? 0, days);
+    byRegistryType[key] = delta(prior.tally.byRegistryType[key] ?? 0, currentTally.byRegistryType[key] ?? 0);
   }
 
   return {
+    note: "delta between two dated crawls, not a rate — a rate needs a series (see snapshot-registry.ts)",
     previousDate: prior.date,
-    days,
-    latestEntries: delta(prior.tally.latestEntries, currentTally.latestEntries, days),
-    npmCandidates: delta(prior.curation.totalNpmCandidates, currentNpmCandidates, days),
-    survivors: delta(prior.curation.survivorCount, currentSurvivors, days),
+    daysBetweenCrawls,
+    latestEntries: delta(prior.tally.latestEntries, currentTally.latestEntries),
+    npmCandidates: delta(prior.curation.totalNpmCandidates, currentNpmCandidates),
+    survivors: delta(prior.curation.survivorCount, currentSurvivors),
     byRegistryType,
   };
 }
@@ -117,12 +121,12 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, `${date}.json`);
 
-  const growth = growthSincePrevious(outDir, date, tally, curation.survivors.length, curation.totalCandidates);
-  if (growth) {
+  const change = deltaSincePreviousCrawl(outDir, date, tally, curation.survivors.length, curation.totalCandidates);
+  if (change) {
+    const sign = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
     console.log(
-      `Growth since ${growth.previousDate} (${growth.days}d): latest ${growth.latestEntries.delta >= 0 ? "+" : ""}${growth.latestEntries.delta} ` +
-        `(${growth.latestEntries.perDay}/day), npm candidates ${growth.npmCandidates.delta >= 0 ? "+" : ""}${growth.npmCandidates.delta}, ` +
-        `survivors ${growth.survivors.delta >= 0 ? "+" : ""}${growth.survivors.delta}.`,
+      `Delta vs ${change.previousDate} (${change.daysBetweenCrawls}d apart, one interval — not a rate): ` +
+        `latest ${sign(change.latestEntries.delta)}, npm candidates ${sign(change.npmCandidates.delta)}, survivors ${sign(change.survivors.delta)}.`,
     );
   }
 
@@ -140,7 +144,7 @@ async function main() {
       failedRepository: curation.failedRepository,
       survivorCount: curation.survivors.length,
     },
-    growthSincePrevious: growth,
+    deltaSincePreviousCrawl: change,
   };
   writeFileSync(outPath, `${JSON.stringify(snapshot, null, 2)}\n`);
   console.log(`Wrote ${outPath}`);
