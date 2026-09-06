@@ -1,0 +1,44 @@
+# toollock verify — copy this into your own repo as
+# .github/workflows/toollock-verify.yml
+#
+# It re-captures every MCP server in your committed tools.lock and fails
+# the run if a tool or prompt drifted from what you locked: a removed
+# tool, a parameter that became required, a rewritten description, an
+# annotation flip. `verify` never writes tools.lock — on a real change
+# you run `toollock update` locally, review the diff, and commit it.
+#
+# The `schedule` trigger is the point of running this at all: a server
+# can change its tool definitions with no commit to your repo, so a
+# push-only check would never see it. The daily run does.
+
+name: toollock verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch: {}
+
+# verify is read-only — it re-captures servers and compares, never
+# writes tools.lock or anything else in the repo.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # verify spawns each locked server with `npx -y <pkg>`, resolving
+      # whatever npm currently calls latest (DECISIONS.md #6) — that
+      # fresh resolve is what makes drift visible, so there is nothing
+      # to cache here on purpose.
+      - name: toollock verify
+        run: npx --yes @onetodone/toollock@latest verify
