@@ -33,7 +33,13 @@ jobs:
     # indefinitely.
     timeout-minutes: 60
     steps:
+      # persist-credentials: false — the probe step runs ~100 unvetted
+      # packages with arbitrary postinstall scripts; the push credential
+      # must not sit in .git/config where one of them could read it. The
+      # final step re-authenticates explicitly, scoped to this repo.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -44,7 +50,9 @@ jobs:
       - id: probe
         run: npm run probe:seed-candidates -- "${{ inputs.draw_file }}"
 
-      - run: |
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/
@@ -52,5 +60,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "data: seed-candidate probe ${{ steps.probe.outputs.date }} (${{ steps.probe.outputs.summary }})"
-            git push
+            git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${GITHUB_REF_NAME}"
           fi
