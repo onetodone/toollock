@@ -30,6 +30,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "data: snapshot ${{ steps.collect.outputs.date }} (${{ steps.collect.outputs.count }} servers)"
+            git commit -m "data: snapshot ${{ steps.collect.outputs.date }} (${{ steps.collect.outputs.count }} servers, ${{ steps.collect.outputs.drift }})"
             git push
           fi
