@@ -1,0 +1,56 @@
+# Phase 5 bucket probe over the seeded draw (DECISIONS.md #12/#17).
+#
+# workflow_dispatch only — never scheduled. It spawns ~100 unvetted npm
+# packages with arbitrary postinstall scripts; decision #11's ephemeral
+# runner with zero secrets is exactly where that belongs, and the
+# runner's cold npm cache + real network latency are the conditions
+# Phase 1's timeouts were sized for. Running it locally would give
+# optimistic timings against a warm cache and put unvetted code on a
+# real machine for no reason.
+#
+# The draw itself (scripts/draw-seed-candidates.ts) is deterministic and
+# runs locally; its output is committed before this workflow runs, so a
+# half-finished probe never means redrawing against a moved registry.
+
+name: Probe seed candidates
+
+on:
+  workflow_dispatch:
+    inputs:
+      draw_file:
+        description: The committed data/seed-candidates-<date>.json to probe
+        required: true
+        default: data/seed-candidates-2026-09-06.json
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    # Hard Actions-level ceiling on top of the script's own 45-minute
+    # wall-time ceiling — a pathological package cannot stall the job
+    # indefinitely.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - id: probe
+        run: npm run probe:seed-candidates -- "${{ inputs.draw_file }}"
+
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "data: seed-candidate probe ${{ steps.probe.outputs.date }} (${{ steps.probe.outputs.summary }})"
+            git push
+          fi

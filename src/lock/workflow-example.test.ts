@@ -45,3 +45,16 @@ test("collect.yml (the shipped collector workflow) parses and stays data/-scoped
   assert.match(commitStep, /git add data\//, "the collector must stage only data/ (DECISIONS.md #13)");
   assert.doesNotMatch(commitStep, /git add -A|git add \.\s/, "a broad add would let the collector commit outside data/");
 });
+
+test("probe-seed-candidates.yml parses, is dispatch-only, data/-scoped, and time-bounded", () => {
+  const wf = parseWorkflow("probe-seed-candidates.yml");
+  const on = wf.on as Record<string, unknown>;
+  assert.deepEqual(Object.keys(on), ["workflow_dispatch"], "the probe batch must never be scheduled — it spawns unvetted packages (DECISIONS.md #11)");
+  assert.deepEqual(wf.permissions, { contents: "write" });
+
+  const job = (wf.jobs as Record<string, { "timeout-minutes"?: number; steps?: Array<Record<string, unknown>> }>).probe;
+  assert.equal(typeof job["timeout-minutes"], "number", "the job needs a hard Actions-level time ceiling");
+  const commitStep = (job.steps ?? []).map((s) => s.run).filter((r): r is string => typeof r === "string").join("\n");
+  assert.match(commitStep, /git add data\//);
+  assert.doesNotMatch(commitStep, /git add -A|git add \.\s/);
+});
