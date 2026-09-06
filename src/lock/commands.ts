@@ -1,5 +1,6 @@
 import { capture } from "../mcp/capture.js";
 import { connect, killTransport, type ServerSpec } from "../mcp/connect.js";
+import { formatBudget, formatBudgetForAll } from "./budget.js";
 import { buildLockedServer } from "./build.js";
 import { classifyServerDrift, hasFailingDrift } from "./diff.js";
 import { DEFAULT_LOCK_FILE_PATH, readLockFile, writeLockFile } from "./io.js";
@@ -97,6 +98,27 @@ export async function runVerify(ids: string[] | null, lockFilePath: string = DEF
     if (hasFailingDrift(findings)) failed = true;
   }
   return { exitCode: failed ? 1 : 0, output };
+}
+
+/**
+ * `toollock budget <pkg>` — captures a server fresh (no `tools.lock`
+ * read or write) and prints its context-tax table. The ad-hoc form:
+ * "what does this server cost me right now", answerable before
+ * committing to a lockfile at all (DECISIONS.md #8).
+ */
+export async function runBudget(target: ServerTarget): Promise<RunResult> {
+  const locked = await captureServer(target);
+  return { exitCode: 0, output: formatBudget(locked) };
+}
+
+/**
+ * `toollock budget` with no package — reads `tools.lock` and prints a
+ * table per locked server plus a roll-up. Uses the stored numbers, no
+ * respawn: the "what do all the servers I depend on cost" view.
+ */
+export function runBudgetForLocked(lockFilePath: string = DEFAULT_LOCK_FILE_PATH): RunResult {
+  const lockFile = readLockFile(lockFilePath);
+  return { exitCode: 0, output: formatBudgetForAll(lockFile.servers) };
 }
 
 /** Re-captures every (or the named) locked server, shows the diff against what's stored, then rewrites tools.lock to match — the explicit, human-invoked acceptance step (DECISIONS.md #6/#7: "diff shown, never silent, never auto-approved"). */

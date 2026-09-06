@@ -5,6 +5,7 @@ export * from "./schema/hash.js";
 export * from "./schema/tokens.js";
 export * from "./lock/schema.js";
 export * from "./lock/build.js";
+export * from "./lock/budget.js";
 export * from "./lock/diff.js";
 export * from "./lock/io.js";
 export * from "./lock/commands.js";

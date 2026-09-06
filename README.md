@@ -51,6 +51,18 @@ ever auto-approved.
 `toollock verify [pkg ...]` / `toollock update [pkg ...]` accept one or
 more package names to target a subset instead of every locked server.
 
+```
+npx toollock budget @your-org/your-mcp-server
+```
+
+Prints the context-tax table for one server — every tool ranked by the
+wire-format tokens it costs your model's context window on **every**
+call, the share of the total each one is, and the canonical (structural)
+token count beside it. `toollock budget` with no arguments does the same
+from `tools.lock` for every server you've locked, plus a roll-up total.
+This is the number the `package-lock` analogy doesn't capture: a tool
+definition is a standing cost, not a one-time install.
+
 **Where the `package-lock.json` analogy breaks:** a real lockfile pins a
 version and *installs* exactly that artifact every run. `toollock` can't
 — every spawn is `npx -y <pkg>`, which always resolves whatever npm

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { runInit, runUpdate, runVerify, type ServerTarget } from "./commands.js";
+import { runBudget, runInit, runUpdate, runVerify, type ServerTarget } from "./commands.js";
 
 // Phase 3's own Definition of Done, run for real: init -> hand-mutate a
 // local fixture server's description -> verify exits 1 and names the
@@ -130,4 +130,36 @@ test("runVerify: a package not in tools.lock is a clean error, not a crash", { t
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("Phase 4: a tool rename (inputSchema untouched) is caught as a rename, not remove+add", { timeout: 60_000 }, async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "toollock-e2e-rename-"));
+  const lockPath = path.join(dir, "tools.lock");
+  try {
+    await withFixtureEnv({ FIXTURE_TOOL_NAME: "echo", FIXTURE_DESCRIPTION: "Echoes the input string", FIXTURE_LIMIT_PARAM: undefined }, () =>
+      runInit(target(), lockPath),
+    );
+
+    const verify = await withFixtureEnv(
+      { FIXTURE_TOOL_NAME: "shout", FIXTURE_DESCRIPTION: "Echoes the input string", FIXTURE_LIMIT_PARAM: undefined },
+      () => runVerify(null, lockPath),
+    );
+    assert.equal(verify.exitCode, 1);
+    assert.match(verify.output, /renamed from "echo"/);
+    assert.doesNotMatch(verify.output, /new tool/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("Phase 4: budget prints a sane table for a real spawned server", { timeout: 60_000 }, async () => {
+  const result = await withFixtureEnv(
+    { FIXTURE_TOOL_NAME: "echo", FIXTURE_DESCRIPTION: "Echoes the input string", FIXTURE_LIMIT_PARAM: "true" },
+    () => runBudget(target()),
+  );
+  assert.equal(result.exitCode, 0);
+  assert.match(result.output, /toollock-fixture-server/);
+  assert.match(result.output, /context tokens \(billed on every call\)/);
+  assert.match(result.output, /^ {2}echo\s+\d+\s+\d+\.\d+%\s+\d+/m);
+  assert.match(result.output, /TOTAL\s+\d+\s+100\.0%/);
 });

@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 import { capture } from "./mcp/capture.js";
 import { connect, killTransport, npxServerSpec } from "./mcp/connect.js";
-import { runInit, runUpdate, runVerify, type ServerTarget } from "./lock/commands.js";
+import { runBudget, runBudgetForLocked, runInit, runUpdate, runVerify, type ServerTarget } from "./lock/commands.js";
 
 const USAGE = `Usage:
   toollock capture <npm-package> [-- <extra npx args>]
   toollock init <npm-package> [-- <extra npx args>]
   toollock verify [npm-package ...]
   toollock update [npm-package ...]
+  toollock budget [npm-package [-- <extra npx args>]]
 `;
 
 function splitExtraArgs(rest: string[]): string[] {
@@ -57,6 +58,14 @@ async function main(argv: string[]): Promise<number> {
     }
     case "update": {
       const result = await runUpdate(rest.length > 0 ? rest : null);
+      process.stdout.write(result.output);
+      return result.exitCode;
+    }
+    case "budget": {
+      const [pkg, ...budgetRest] = rest;
+      const result = pkg
+        ? await runBudget({ id: pkg, command: "npx", args: ["-y", pkg, ...splitExtraArgs(budgetRest)] })
+        : runBudgetForLocked();
       process.stdout.write(result.output);
       return result.exitCode;
     }
