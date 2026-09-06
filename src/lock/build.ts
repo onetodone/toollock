@@ -33,6 +33,7 @@ export function buildLockedServer({ id, command, args, result }: BuildLockedServ
         name: tool.name,
         description: tool.description ?? null,
         inputSchema: canonicalizeInputSchema((tool.inputSchema ?? {}) as JsonValue),
+        annotations: (tool.annotations as JsonValue | undefined) ?? null,
         schemaHash: hashes.schemaHash,
         promptHash: hashes.promptHash,
         canonicalTokens: tokens.canonicalTokens,

@@ -8,6 +8,7 @@ function tool(overrides: Partial<LockedTool> = {}): LockedTool {
     name: "search",
     description: "Searches for things",
     inputSchema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] },
+    annotations: null,
     schemaHash: "schema-a",
     promptHash: "prompt-a",
     canonicalTokens: 100,
@@ -213,6 +214,91 @@ test("classifyServerDrift: server contextBudget growth over 10% is cost-drift at
   assert.equal(findings.length, 1);
   assert.equal(findings[0].class, "cost-drift");
   assert.equal(findings[0].scope, "server");
+});
+
+// --- Phase 4 classifier edge cases ---
+
+test("classifyServerDrift: a removed tool + a new tool with the same schemaHash is one rename, not remove+add", () => {
+  const oldS = server({ tools: [tool({ name: "search", schemaHash: "s1", promptHash: "p1" })] });
+  const newS = server({ tools: [tool({ name: "find", schemaHash: "s1", promptHash: "p1" })] });
+  const findings = classifyServerDrift(oldS, newS);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].class, "schema-breaking");
+  assert.equal(findings[0].name, "find");
+  assert.match(findings[0].message, /renamed from "search"/);
+  assert.equal(hasFailingDrift(findings), true);
+});
+
+test("classifyServerDrift: a rename that also rewrites the description reports both", () => {
+  const oldS = server({ tools: [tool({ name: "search", schemaHash: "s1", promptHash: "p1", description: "Searches" })] });
+  const newS = server({ tools: [tool({ name: "find", schemaHash: "s1", promptHash: "p2", description: "Finds things, and also does X" })] });
+  const findings = classifyServerDrift(oldS, newS);
+  assert.equal(findingsFor(findings, "schema-breaking").length, 1);
+  assert.equal(findingsFor(findings, "prompt-drift").length, 1);
+  assert.match(findingsFor(findings, "prompt-drift")[0].message, /description text changed/);
+});
+
+test("classifyServerDrift: two genuinely unrelated tool swaps stay remove+add (distinct schemaHashes)", () => {
+  const oldS = server({ tools: [tool({ name: "a", schemaHash: "sa", promptHash: "pa" })] });
+  const newS = server({ tools: [tool({ name: "b", schemaHash: "sb", promptHash: "pb" })] });
+  const findings = classifyServerDrift(oldS, newS);
+  assert.equal(findingsFor(findings, "schema-breaking").length, 1);
+  assert.match(findingsFor(findings, "schema-breaking")[0].message, /removed/);
+  assert.equal(findingsFor(findings, "schema-additive").length, 1);
+  assert.match(findingsFor(findings, "schema-additive")[0].message, /new tool/);
+});
+
+test("classifyServerDrift: enum value added is schema-additive", () => {
+  const withEnum = (values: string[]) => ({
+    type: "object",
+    properties: { mode: { type: "string", enum: values } },
+    required: [],
+  });
+  const oldS = server({ tools: [tool({ inputSchema: withEnum(["fast", "slow"]) })] });
+  const newS = server({ tools: [tool({ schemaHash: "schema-b", inputSchema: withEnum(["fast", "slow", "turbo"]) })] });
+  const findings = classifyServerDrift(oldS, newS);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].class, "schema-additive");
+  assert.match(findings[0].message, /enum value\(s\) added: "turbo"/);
+});
+
+test("classifyServerDrift: enum value removed is schema-breaking", () => {
+  const withEnum = (values: string[]) => ({
+    type: "object",
+    properties: { mode: { type: "string", enum: values } },
+    required: [],
+  });
+  const oldS = server({ tools: [tool({ inputSchema: withEnum(["fast", "slow", "turbo"]) })] });
+  const newS = server({ tools: [tool({ schemaHash: "schema-b", inputSchema: withEnum(["fast", "slow"]) })] });
+  const findings = classifyServerDrift(oldS, newS);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].class, "schema-breaking");
+  assert.match(findings[0].message, /enum value\(s\) removed: "turbo"/);
+});
+
+test("classifyServerDrift: an annotations-only change is prompt-drift and names the changed hint", () => {
+  const oldS = server({ tools: [tool({ annotations: { readOnlyHint: true, title: "Search" }, promptHash: "p1" })] });
+  const newS = server({ tools: [tool({ annotations: { readOnlyHint: false, title: "Search" }, promptHash: "p2" })] });
+  const findings = classifyServerDrift(oldS, newS);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].class, "prompt-drift");
+  assert.equal(findings[0].severity, "fail");
+  assert.match(findings[0].message, /annotations changed \(readOnlyHint\)/);
+});
+
+test("classifyServerDrift: annotations key reordering is not drift (JCS-compared)", () => {
+  const oldS = server({ tools: [tool({ annotations: { readOnlyHint: true, title: "Search" } })] });
+  const newS = server({ tools: [tool({ annotations: { title: "Search", readOnlyHint: true } })] });
+  assert.deepEqual(classifyServerDrift(oldS, newS), []);
+});
+
+test("classifyServerDrift: a renamed prompt is one finding, not remove+add", () => {
+  const oldS = server({ prompts: [prompt({ name: "greet", schemaHash: "ps1", promptHash: "pp1" })] });
+  const newS = server({ prompts: [prompt({ name: "welcome", schemaHash: "ps1", promptHash: "pp1" })] });
+  const findings = classifyServerDrift(oldS, newS);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].class, "schema-breaking");
+  assert.match(findings[0].message, /renamed from "greet"/);
 });
 
 // --- Prompts mirror the tool invariants ---

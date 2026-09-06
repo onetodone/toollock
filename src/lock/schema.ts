@@ -5,6 +5,8 @@ export interface LockedTool {
   description: string | null;
   /** Canonicalized (inlined `$ref`, `required[]`/`enum[]` sorted) — NOT description-stripped, unlike `schemaHash`'s basis, so a PR reviewer sees the real structure and text together, not an opaque hash. */
   inputSchema: JsonValue;
+  /** The SDK's `ToolAnnotations` hint block (`readOnlyHint`, `destructiveHint`, `title`, …) verbatim, or `null`. Folded into `promptHash` (DECISIONS.md #4) and stored here too so `verify`'s text diff can name *which* hint changed, not just that `promptHash` moved (closes a Known-limitation gap in Phase 4). */
+  annotations: JsonValue | null;
   schemaHash: string;
   promptHash: string;
   canonicalTokens: number;
