@@ -1,13 +1,14 @@
 # DECISIONS.md — @onetodone/toollock
 
 One entry per decision. Each has a **Decision**, **Alternatives rejected**,
-and **Why**. Fully reasoned, no stub markers remaining: 7, 12, 13, 15, 17,
-18, 19. Phase 0's spikes substantially rewrote 3, 5, 6, and 11 with real,
-measured content — each still carries at most one narrower
-`(expand: ...)` note on a point the spikes didn't touch. The rest — 1, 2,
-4, 8, 9, 10, 14, 16 — still carry the stub markers seeded from context
-gathered before planning began; the bullet points under their "Why"
-sections are starting points, not finished reasoning.
+and **Why**. Fully reasoned, no stub markers remaining: 1, 2, 4, 7, 8, 9,
+12, 13, 15, 17, 18, 19. Phase 0's spikes substantially rewrote 3, 5, 6,
+and 11 with real, measured content — each still carries at most one
+narrower `(expand: ...)` note on a point the spikes didn't touch. The
+rest — 10, 14, 16 — still carry stub markers: 14 and 16 are deliberately
+deferred (a scope cut and a pending-Phase-5-data threshold respectively),
+so their "Why" sections stay short on purpose; 10 gets its final pass in
+Phase 6.
 
 ## 1. Stack
 
@@ -22,10 +23,23 @@ transport, spawn via `npx -y <pkg>`.
 
 **Why:**
 
-- (expand: why TS specifically for a portfolio piece — ecosystem fit with
-  MCP tooling, npm distribution)
-- (expand: why stdio-first — matches how most public MCP servers are
-  actually consumed today)
+- TypeScript/Node because the thing being measured is a TypeScript/Node
+  ecosystem: the reference MCP SDK is TS-first, the servers this tool
+  spawns are overwhelmingly npm packages run with `npx`, and the output
+  is a lockfile that belongs next to `package-lock.json` in the same kind
+  of repo. A Python port would have to reimplement the SDK's stdio
+  framing and schema types against a moving target for no gain in
+  coverage.
+- stdio-first because that is how the public MCP ecosystem is actually
+  consumed today: an editor or agent spawns `npx -y <pkg>` and talks
+  JSON-RPC over the child's stdin/stdout. HTTP/SSE transport only reaches
+  remote-hosted servers, a smaller and differently-shaped slice (its
+  drift story is a deployment's problem, not a dependency's). Starting
+  narrow keeps the security model (decision #11) and the capture path
+  (decision #5's raw-stdout tee) simple enough to actually get right.
+- The npx/stdio-only scope is stated as a limitation in the README, not
+  buried — it means `toollock` cannot see roughly 70% of the public
+  registry (decision #12, and the README's scope note).
 
 ## 2. Capture scope
 
@@ -39,9 +53,22 @@ transport, spawn via `npx -y <pkg>`.
 
 **Why:**
 
-- (expand: why prompts matter for the rug-pull story too, not just tools)
-- (expand: why resources was excluded — scope discipline, or resources
-  don't carry the same "executable prompt" risk)
+- Prompts are in scope because an MCP prompt is a server-supplied
+  template that a client renders straight into the model's context — the
+  same rug-pull surface a tool description is. A server that quietly
+  rewrites a prompt's text, or changes which arguments it interpolates,
+  changes model behavior with no code change on the client side; that is
+  exactly the change `toollock` exists to make reviewable. The
+  `schemaHash`/`promptHash` split (decision #4) is defined for prompts
+  too, not just tools.
+- `resources/list` is excluded because a resource is addressable content
+  the client chooses to fetch, not text auto-loaded into context — it
+  doesn't carry the "executed without anyone deciding to" property that
+  makes tool and prompt drift dangerous. Capturing it would roughly
+  double the surface for a category whose contents legitimately change
+  all the time (that's what resources are *for*), producing drift noise
+  with no rug-pull signal underneath it. Listed in PLAN.md's "Considered
+  and deferred," not silently dropped.
 
 ## 3. Canonicalization
 
@@ -88,10 +115,22 @@ separately.
   behavior and are the rug-pull surface. A combined hash conflates "added
   an optional parameter" with "appended an instruction to a description" —
   this was the stated reason for the split and is the core of the pitch.
-- (expand: any cases where the split itself is ambiguous — e.g. does
-  `annotations.title` belong in promptHash or somewhere else? Decided:
-  promptHash, per the SDK's `ToolAnnotations` shape being entirely
-  descriptive/hint fields.)
+  Concretely: it is what lets `verify` fail a description rewrite while
+  passing a new optional parameter in the same run (decision #7's
+  per-class policy), instead of forcing one exit code onto both.
+- **Where the split's boundary needed a call:** `annotations` (the SDK's
+  `ToolAnnotations` — `title`, `readOnlyHint`, `destructiveHint`,
+  `idempotentHint`, `openWorldHint`) go in `promptHash`, not `schemaHash`.
+  Every field there is a descriptive or behavioral hint a client acts on,
+  not a wire-compatibility constraint: `readOnlyHint` flipping to `false`
+  doesn't break a call, it changes whether a client auto-approves one —
+  behavioral, so it belongs with the text the model and client read.
+  Phase 4 also stores `annotations` verbatim in `tools.lock` (not just
+  folded into the hash) so `verify` can name which hint changed, not just
+  report that `promptHash` moved.
+- **What stays out of both hashes in v1:** `outputSchema` (decision #14)
+  and `_meta`. Both are deferred deliberately, documented in known
+  limitations, not silently ignored.
 
 The split applies to `PromptSchema` too, not just `ToolSchema` — the
 original design named `prompts/list` as in scope (#2) but never said how
@@ -392,36 +431,97 @@ the new one, not just a hash telling it *that* something changed.
 ## 8. Commands
 
 **Decision:** `init`, `verify` (exit 1 on drift), `update` (accept with
-diff shown), `budget` (context tax table).
+diff shown), `budget` (context-tax table). Plus `capture` — a raw JSON
+dump of one server's `tools/list` + `prompts/list` response and wire
+token counts, kept from Phase 1 as a debugging/inspection primitive,
+not part of the lockfile workflow.
 
 **Alternatives rejected:**
 
-- A single combined command with flags instead of subcommands.
+- A single combined command with flags instead of subcommands
+  (`toollock --check` / `--fix`).
+- Folding `budget` into `verify` as a `--budget` flag.
 
 **Why:**
 
-- (expand: why this mirrors the init/verify/update shape from other
-  lockfile tools users already know)
+- `init`/`verify`/`update` deliberately mirror the shape every lockfile
+  tool already uses — `npm install`/`npm ci`, `bundle install`/`--frozen`,
+  `cargo build`/`--locked`: capture once, check against the capture in
+  CI, take an explicit human step to move the baseline. A user doesn't
+  learn a new mental model, only a new target for one they have. `verify`
+  is the CI verb and never writes; `update` is the only command besides
+  `init` that writes, and only after showing the full diff (decisions
+  #6/#7).
+- No combined `--check`/`--fix` command: the verbs carry different
+  permissions (`verify` is read-only, `update` writes) and different
+  audiences (`verify` runs unattended in CI, `update` is always
+  interactive), and collapsing them behind flags hides exactly the
+  distinction that matters — that accepting drift is never automatic.
+- `budget` is its own verb, not a flag on `verify`, because it answers a
+  different question on a different cadence: not "did this change" (every
+  CI run) but "what does this cost" (when deciding whether to add a
+  server, or hunting for what's filling a context window). It reads
+  `wireTokens` — what a client's context window is actually billed for,
+  decision #5 — and takes a package directly (`toollock budget <pkg>`, a
+  fresh capture, no `tools.lock` needed) so the number is reachable
+  before committing to anything; with no argument it prints the same
+  table for every server already locked, plus a roll-up. It has no
+  security dimension at all, which is another reason not to entangle it
+  with `verify`.
 
 ## 9. Positioning
 
 **Decision:** this is a lockfile mechanism, not a security scanner. It
 never judges intent; it makes change visible and requires explicit
-approval. Snyk Agent Scan (formerly Invariant Labs mcp-scan) overlaps
-partially — the README acknowledges this openly rather than hiding it.
+approval. Snyk Agent Scan (which absorbed Invariant Labs' `mcp-scan`)
+overlaps partially — the README names the overlap and the difference
+openly rather than talking around it.
 
 **Alternatives rejected:**
 
 - Marketing this as a security/threat-detection tool.
-- Ignoring the overlap with existing scanners.
+- Ignoring the overlap with existing scanners, or overstating the
+  difference to manufacture a gap.
 
 **Why:**
 
-- (expand: why "lockfile" is the more defensible and more differentiated
-  frame — scanners judge intent and can be wrong; a lockfile just tracks
-  change, which is a narrower and more honest claim)
-- (expand: what specifically Snyk Agent Scan/mcp-scan does that this
-  doesn't, and vice versa, for the README's honest-comparison paragraph)
+- **"Lockfile" is the more defensible frame because it makes a narrower
+  claim.** A scanner asserts something about *intent* — "this
+  description looks like a prompt injection," "this tool is unsafe" — and
+  can be wrong in both directions: a false positive trains users to
+  ignore it, a false negative is the breach it existed to prevent.
+  `toollock` asserts only "these bytes are not the bytes you approved,"
+  which is either true or false and never a judgment call. It cannot be
+  wrong about intent because it never forms a view on intent.
+
+- **What Snyk Agent Scan / `mcp-scan` does that `toollock` doesn't:**
+  static analysis of tool descriptions for prompt-injection and
+  tool-poisoning patterns; detection of tool shadowing (one server
+  redefining another's tool) and cross-server "toxic flows"; an optional
+  runtime proxy that inspects live MCP traffic and can block calls; a
+  policy engine and hosted classification. That is a security product
+  with a large surface, and `toollock` replaces none of it.
+
+- **The overlap, named precisely:** `mcp-scan` also hashes tool
+  descriptions and warns when they change between runs — its
+  "tool-pinning" / rug-pull check. The differences are (a) its pins live
+  in `~/.mcp-scan/` on one developer's machine, not in the repo, so
+  they're never reviewed in a PR, shared across a team, or evaluated in
+  CI; (b) it emits a single changed/unchanged signal, where `toollock`
+  splits structural from behavioral change (decision #4) and classifies
+  each into a pass/warn/fail policy (decision #7) with CI exit codes;
+  (c) it says nothing about token cost, which `toollock budget`
+  (decision #8) treats as a first-class axis with no security dimension.
+  `toollock` is *only* the committed-artifact-plus-classified-diff
+  mechanism — no proxy, no classifier, no hosted component.
+
+- **Where `toollock` is weaker, stated too:** a scanner that reads
+  descriptions can flag a plausible injection on the *first* run, before
+  any baseline exists. `toollock` has nothing to say about a server's
+  first capture — it only ever reports change *from* an approved state.
+  The two are complementary: scan to judge what you're about to trust,
+  lock to notice when it changes underneath you.
+
 - Part of positioning this honestly is naming where the `package-lock`
   analogy itself breaks (see #6): a real lockfile pins and installs a
   fixed artifact; `toollock` can't, because pinning the spawn would make
@@ -821,14 +921,30 @@ a real structural diff, not just a hash-equality check:
   `inputSchema.properties` (tools) or `arguments` (prompts), only when
   `schemaHash` differs: a removed property/argument, a new property/
   argument (required → breaking, optional → additive), a property's
-  `type` changing, or a `required[]` membership flip (added → breaking,
-  removed → additive) — covering exactly decision #7's named examples.
+  `type` changing, a `required[]` membership flip (added → breaking,
+  removed → additive), or — added in Phase 4 — an `enum` membership
+  change (a value removed → breaking, values only added → additive).
   **A `schemaHash` change matching none of these known patterns defaults
   to `schema-breaking`** rather than passing silently — the same
   "silence is the wrong default" stance decision #7 already takes for
   prompt-drift, applied to the classifier's own blind spots. PLAN.md's
-  Phase 4 ("classifier edge cases") owns replacing this default with
-  real handling as cases are found, not this phase.
+  Phase 4 ("classifier edge cases") owns narrowing this default further
+  as new cases are found.
+- **Rename detection** (Phase 4): a disappeared tool/prompt and a new
+  one that carries an *identical* `schemaHash` are reported as one
+  `schema-breaking` "renamed from …" finding, not an unrelated
+  `tool removed` + `new tool` pair (the additive half of which was
+  always misleading — a rename is not a new capability). A 256-bit
+  structural-hash collision between a removed and an added entry of the
+  same server isn't a coincidence worth guarding against, and the
+  severity is `fail` either way, so a wrong inference costs a clearer
+  message, never a wrong CI outcome. A rename that also rewrites the
+  description still reports the `prompt-drift` separately.
+- **Annotation drift** (Phase 4): `tools.lock` now stores each tool's
+  `annotations` block verbatim (decision #4), so a `readOnlyHint` flip
+  or a `title` reword is reported as `prompt-drift` (fail) naming the
+  changed hint — not left as an unexplained `promptHash` move. Compared
+  via JCS so key-order noise doesn't register.
 - **Cost drift** applies decision #16's stub thresholds literally
   (`COST_DRIFT_TOOL_THRESHOLD = 0.15`, `COST_DRIFT_BUDGET_THRESHOLD =
   0.10`): per-tool `canonicalTokens` growth over 15%, or server-wide
@@ -881,12 +997,17 @@ fixtures) in Phase 3's end-to-end test.
   avoid elsewhere). **Mitigation:** if a real cyclic schema surfaces
   later, this gets revisited with real data instead of speculative
   handling now; documented in PLAN.md's risk table.
-- `annotations` (tool hints — `readOnlyHint`, `title`, etc.) factor into
-  `promptHash` (decision #4) but aren't stored in `tools.lock` as their
-  own field (`LockedTool` has no `annotations` property). An
-  annotations-only change would move `promptHash` but `verify`'s text
-  diff (decision #19) can't say *what* changed, since it only compares
-  stored `description` fields, not the hash's full payload.
-  **Mitigation:** none yet — a real gap, not a deliberate scope cut like
-  `outputSchema` above; candidate for Phase 4's classifier-edge-case
-  pass once it's worth the schema growth.
+- ~~`annotations` factor into `promptHash` but aren't stored in
+  `tools.lock`, so an annotations-only change moves `promptHash` with no
+  way for `verify` to say what changed.~~ **Closed in Phase 4:**
+  `LockedTool` gained an `annotations` field (the SDK block verbatim, or
+  `null`), `build.ts` populates it, and decision #19's classifier reports
+  an annotation change as `prompt-drift` naming the changed hint. See
+  decision #4 and decision #19's Phase 4 amendments.
+- The classifier's rename detection (decision #19, Phase 4) infers a
+  rename from `schemaHash` equality alone. A server that legitimately
+  removes one tool and adds a structurally-identical unrelated one in the
+  same release will be reported as a rename. **Mitigation:** severity is
+  `fail` either way, so CI behaviour is unaffected; `update`'s diff shows
+  the real before/after for a human to read. Low stakes by construction,
+  not a gap left open by omission.
