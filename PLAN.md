@@ -314,18 +314,35 @@ and `list-timeout` counts recorded per dataset entry.
 
 **Status:** drift computation + `stableAcrossSpawns` + the bucket-broken-out
 commit message are built and tested (`src/collector/drift.ts`,
-`src/collector/determinism.ts`). Seed-list expansion (the seeded draw,
-the probe over the sample) is what's left.
+`src/collector/determinism.ts`). Seed-list expansion is split into the
+deterministic draw (`src/collector/draw.ts`,
+`scripts/draw-seed-candidates.ts` — done, output committed before the
+probe) and the batch probe (`src/collector/probe.ts`,
+`scripts/probe-seed-candidates.ts`, run via
+`.github/workflows/probe-seed-candidates.yml`, `workflow_dispatch`
+only). What's left: run the probe, build the final seed list from its
+`list-open` results, hand-promote ≤5 `list-auth-required` to
+`list-env-gated`, and record the outcome distribution as a finding.
 
 **Selection method — decided, see DECISIONS.md #17:** a seeded
-pseudorandom draw over the ~7,745 curation-bar survivors, not a ranking.
-The survivor list is pinned as a data artifact at draw time
-(`data/registry/<date>-survivors.json`); `data/seed-list.json` records
-the seed value, the PRNG name, and the survivor file's content hash, so
-the exact sample is reproducible and an independent draw under a
-different seed can be used to sanity-check the dataset's findings. The
-probe walks the seeded shuffle in order, keeping `list-open` and
-promoted `list-env-gated` servers until the list hits its target size.
+pseudorandom draw over the curation-bar survivors, not a ranking. The
+survivor list is pinned at draw time (`data/registry/<date>-survivors.json`);
+the draw (`data/seed-candidates-<date>.json`) records the seed, the PRNG
+name (`xmur3+mulberry32`), and the survivor file's sha256, so the exact
+sample reproduces and an independent draw under a different seed can
+sanity-check the findings. The draw is committed before the probe runs,
+so a half-finished probe never forces a redraw against a moved registry.
+
+**Expect a much higher failure rate than Phase 0's curated 10.** A
+random draw from ~7,700 is a different population — `list-timeout` and
+dirty-stdout servers will be materially more common. The probe batch
+(`probeAll`) records every per-server failure and skips it, never
+aborts the run, and enforces a total wall-time ceiling so one
+pathological package can't stall the job. The outcome distribution over
+the drawn sample is recorded as its own finding — the first bucket
+distribution measured on a *random* sample rather than a curated one,
+which is the number the "fraction of the registry that can't be audited
+without credentials" claim actually rests on.
 
 **The first drift count turned out to be 1, not 0 — and it's real.** The
 prediction here was zero (two snapshots a day apart, stable servers).

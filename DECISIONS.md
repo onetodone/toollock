@@ -580,6 +580,18 @@ dataset workflow. The two code paths intentionally diverge here — see
 (ambient environment) if the difference looks like an inconsistency
 rather than a deliberate one.
 
+**Phase 5: the seed-candidate probe batch runs here too, not locally.**
+`.github/workflows/probe-seed-candidates.yml` (`workflow_dispatch` only,
+never scheduled) spawns ~100 packages drawn at random from the registry
+— a materially more hostile population than the daily collector's fixed,
+already-probed seed list. That is precisely the case this decision's
+ephemeral-runner-with-zero-secrets model exists for, so the batch runs
+on the runner, not a developer's machine. It's also the honest place to
+measure it: the runner's cold npm cache and real network latency are the
+conditions Phase 1's 30s-connect/15s-list timeouts were sized for, and a
+warm-cache local run would report optimistic timings and hide the
+`list-timeout` cases the finding needs to count.
+
 **Known constraint, unrelated to this decision but belongs here as an
 operational note:** GitHub automatically disables a `schedule`-triggered
 workflow on a public repo after 60 days with no new commits to the
@@ -906,6 +918,26 @@ same standard decisions #12 and #17's bar already hold themselves to.
   curation-bar drop counts. Counts only, not the multi-thousand-entry
   candidate list itself — keeps the file small and diffable (decision
   #13), and the raw list is reproducible from a re-run if ever needed.
+
+**Phase 5 adds three more, for the seeded seed-list expansion (decision
+#17):**
+
+- `data/registry/<ISO-date>-survivors.json` — the full curation-bar
+  survivor list (`packageName`, `name`, `repositoryUrl`), sorted by
+  `packageName`. **The one deliberate exception to the counts-only rule
+  above:** a reproducible seeded draw has to run against the exact list
+  it drew from, and the registry moves, so this list is pinned. Large
+  (~7,700 entries) but write-once.
+- `data/seed-candidates-<ISO-date>.json` — the draw
+  (`scripts/draw-seed-candidates.ts`): the seed string, the PRNG name,
+  the survivor file path and its sha256, and the first N shuffled
+  candidates. Committed *before* the probe runs.
+- `data/seed-candidates-<ISO-date>-results.json` — the probe output
+  (`scripts/probe-seed-candidates.ts`, run via
+  `.github/workflows/probe-seed-candidates.yml`): per-candidate bucket,
+  tool/prompt counts, duration, failure detail; plus `byBucket`,
+  `notProbed`, and whether the wall-time ceiling was hit. Bot-committed
+  by the workflow, `data/`-scoped like `collect.yml` (decision #13).
 
 **v1's seed list is Phase 0 spike 3's already-probed 10 servers, reused
 verbatim (bucket assignments hand-transcribed from `docs/spikes/phase-0.md`,
