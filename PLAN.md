@@ -357,17 +357,20 @@ distribution measured on a *random* sample rather than a curated one,
 which is the number the "fraction of the registry that can't be audited
 without credentials" claim actually rests on.
 
-**The first drift count turned out to be 1, not 0 — and it's real.** The
-prediction here was zero (two snapshots a day apart, stable servers).
-The hand-diff (`docs/findings/2026-09-06-sentry-proxy-instability.md`)
-found exactly one drifted server: `sentry-mcp-server`, a `list-env-gated`
-proxy that returned 9 tools on 09-05 and 22 on 09-06 at a static package
-version. That is not a bug — it's the dataset's first real finding, and
-it drove decision #20 (the `stableAcrossSpawns` field and the
-bucket-broken-out count). `drift.test.ts` pins this exact result.
-Whatever the next scheduled run reports, confirm it against a hand-diff
-before trusting or doubting it; a `list-env-gated`-only drift count is
-expected noise, a `list-open` one is the signal.
+**The first drift count turned out to be 1, not 0.** The prediction here
+was zero (two snapshots a day apart, stable servers). The hand-diff
+(`docs/findings/2026-09-06-sentry-node-engines-pin.md`) found exactly
+one drifted server: `sentry-mcp-server`, 9 tools on 09-05 and 22 on
+09-06. It was first read as proxy instability and drove decision #20
+(the `stableAcrossSpawns` field and the bucket-broken-out count). A
+month later it turned out to be two package versions: the local run used
+Node 22 and got 0.39.0, while CI used Node 20 and npm's engines-aware
+resolution gave it 0.36.0 (decision #21). The collector now spawns the
+resolved `latest` version exactly and records `observedVersion`.
+`drift.test.ts` still pins the 09-05 → 09-06 count, which is correct; only
+its cause changed. Whatever a scheduled run reports, confirm it against a
+hand-diff, **including the `observedVersion` on each side**, before
+trusting or doubting it.
 
 **Definition of done:** a scheduled run's commit message shows a real
 drift count computed against the previous snapshot, broken out by bucket;

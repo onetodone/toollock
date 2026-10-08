@@ -37,8 +37,9 @@ test("diffHashSets: a moved schemaHash and a moved promptHash are reported separ
 });
 
 test("diffHashSets: the Sentry case — set size changed and shared members moved", () => {
-  // The shape docs/findings/2026-09-06-sentry-proxy-instability.md records:
-  // 9 tools one spawn, more the next, and the shared ones' hashes differ.
+  // The shape docs/findings/2026-09-06-sentry-node-engines-pin.md records
+  // across two package versions: 9 tools one capture, more the next, and
+  // the shared ones' hashes differ.
   const ref = new Map([
     ["search_events", h("a", "a")],
     ["search_issues", h("b", "b")],

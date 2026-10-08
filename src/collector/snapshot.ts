@@ -62,8 +62,7 @@ export interface ServerSnapshot {
   /**
    * Did an immediate second spawn produce byte-identical tool/prompt
    * hashes? Measured per server (one extra spawn), not inferred from the
-   * bucket — `docs/findings/2026-09-06-sentry-proxy-instability.md`,
-   * DECISIONS.md #20. `null` when the recheck spawn failed; absent for
+   * bucket — DECISIONS.md #20. `null` when the recheck spawn failed; absent for
    * servers that were never captured (`list-auth-required`/
    * `list-timeout`, or `error`).
    */

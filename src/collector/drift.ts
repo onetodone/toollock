@@ -9,10 +9,10 @@ import type { PromptRecord, SeedBucket, ServerSnapshot, ToolRecord } from "./sna
  *
  * The drift *count* is broken out by bucket in the commit message
  * (decision #20): a `list-open` server rewriting a description is the
- * rug-pull signal; a `list-env-gated` proxy's tool list shifting is
- * expected churn the caveat already predicted
- * (`docs/findings/2026-09-06-sentry-proxy-instability.md`). Collapsing
- * both into one number would misrepresent the finding.
+ * rug-pull signal; a `list-env-gated` server's tool list shifting
+ * (placeholder credentials, possibly a remote backend) is the churn its
+ * caveat already predicts. Collapsing both into one number would let the
+ * second be misread as the first.
  */
 
 export interface SnapshotFile {

@@ -56,9 +56,12 @@ export function diffHashSets(kind: "tool" | "prompt", reference: Map<string, Has
  *
  * The premise `toollock verify` depends on is that spawning an unchanged
  * server twice yields the same hashes. Phase 0/2 confirmed it for
- * locally-generated schemas; `docs/findings/2026-09-06-sentry-proxy-instability.md`
- * is a proxy server where it doesn't hold. This measures it per server
- * rather than inferring it from the bucket (DECISIONS.md #20): two
+ * locally-generated schemas; a server that forwards `tools/list` to a
+ * remote backend could break it, though none in the dataset has so far
+ * (the one apparent case was two package versions —
+ * `docs/findings/2026-09-06-sentry-node-engines-pin.md`). This measures
+ * it per server rather than inferring it from the bucket (DECISIONS.md
+ * #20): two
  * adjacent spawns agreeing isn't proof of long-run stability, but two
  * disagreeing is proof of instability, and the cross-snapshot drift
  * count catches the slower case.

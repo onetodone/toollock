@@ -1038,17 +1038,21 @@ this decision fills that in with the concrete algorithm actually
 shipped, verified against a real spawned fixture server (not just unit
 fixtures) in Phase 3's end-to-end test.
 
-## 20. Proxy-server instability: measure it, break drift out by bucket (Phase 5)
+## 20. Spawn stability: measure it, break drift out by bucket (Phase 5)
 
-**Context:** the dataset's first real measurement
-(`docs/findings/2026-09-06-sentry-proxy-instability.md`) was a server
-that broke the lockfile's implicit premise. `@sentry/mcp-server@0.39.0` —
-one npm artifact, published Aug 27, unchanged — returned 9, then 22, then
-9 tools within 24 hours, with `serverInfo.version` and `observedVersion`
-static at `0.39.0` the whole time and every shared tool's `schemaHash`
-moving between the 9- and 22-tool captures. It's a proxy: `tools/list`
-forwards to Sentry's hosted backend, so the list is not a function of
-anything `toollock` spawns or pins.
+**Context:** the dataset's first real drift
+(`docs/findings/2026-09-06-sentry-node-engines-pin.md`) was
+`@sentry/mcp-server` returning 9, then 22, then 9 tools within 24 hours.
+At the time it was read as a proxy whose `tools/list` comes from a remote
+backend and so isn't a function of the package version, with
+`observedVersion` assumed static at `0.39.0`. **Corrected 2026-10-08
+(decision #21):** the 22-tool capture was CI on Node 20, which npm
+resolved to 0.36.0, and the 9-tool ones were local on Node 22 at 0.39.0.
+Two package versions, each byte-stable. The decision below doesn't
+depend on that premise. A server that does forward `tools/list` remotely
+would break the lockfile premise in exactly the way first suspected, and
+measuring that is cheap. It now stands as a precaution with no observed
+instance, not a response to one.
 
 **Decision:**
 
@@ -1058,12 +1062,10 @@ anything `toollock` spawns or pins.
    which is `scripts/check-hash-determinism.ts`'s check run inline).
    `true`/`false`, or `null` when the recheck spawn fails, plus a
    `spawnVariance` list naming what moved. **Measured, never inferred
-   from the bucket:** Sentry is `list-env-gated` and unstable, Notion is
-   `list-open` and stable, and that correlation is incidental — a
-   `list-open` proxy would behave exactly like Sentry. Two adjacent
-   spawns agreeing is not proof of long-run stability (Sentry currently
-   reads `true`, both spawns landing its 9-tool state); it only ever
-   proves instability when it catches a disagreement. The slower case is
+   from the bucket:** a `list-open` proxy would be just as unstable as a
+   `list-env-gated` one. Two adjacent spawns agreeing is not proof of
+   long-run stability. It only proves instability when it catches a
+   disagreement. The slower case is
    what the cross-snapshot drift count is for.
 
 2. **The cross-snapshot drift count is broken out by bucket** in the
@@ -1071,8 +1073,9 @@ anything `toollock` spawns or pins.
    list-env-gated`, or `2 drifted — 1 list-open, 1 list-env-gated`
    (`src/collector/drift.ts`). A `list-open` server rewriting a
    description is the rug-pull signal the project exists to surface; a
-   `list-env-gated` proxy's tool list shifting is expected churn its
-   caveat flag (decision #12) already predicts. A single collapsed
+   `list-env-gated` server's tool list shifting (placeholder
+   credentials, possibly a remote backend) is churn its caveat flag
+   (decision #12) already predicts. A single collapsed
    number would let the second be misread as the first in the commit
    log. Seed-list edits and capture-status flips (captured ↔ errored)
    are tracked in the `drift` block but kept out of the count entirely —
@@ -1093,10 +1096,13 @@ anything `toollock` spawns or pins.
 
 **Why:** the lockfile premise (same input → same output) is sound for
 locally-generated schemas and the project should keep asserting it
-there. For proxy servers it's false, `toollock` can't detect that from
-the protocol alone, and the honest response is to measure what it can
-(adjacent-spawn stability), name what it can't (below), and make sure
-the published drift numbers can't be misread.
+there. For a server that forwards `tools/list` remotely it would be
+false, and `toollock` can't detect that from the protocol alone. The
+honest response is to measure what it can (adjacent-spawn stability),
+name what it can't (below), and make sure the published drift numbers
+can't be misread. The month after this decision also showed the
+measurement isn't enough by itself: with the spawned version unrecorded,
+a stale version looked exactly like a stable server (decision #21).
 
 ## 21. The collector runs on Node 22 (corrects #20's premise)
 
@@ -1120,7 +1126,8 @@ This also explains the 09-05 → 09-06 "proxy instability" that decision
 09-06 re-probes were local again (9 tools). Two package versions, not
 one backend changing its mind. In 0.42.0 the 9-tool list is a
 hardcoded constant in the package (`TOP_LEVEL_TOOL_NAMES`), and
-`tools/list` is answered locally.
+`tools/list` is answered locally. See
+`docs/findings/2026-09-06-sentry-node-engines-pin.md`.
 
 **Decision:**
 
@@ -1178,16 +1185,16 @@ like a correct one for a month.
 - **`toollock` cannot distinguish a proxy server's backend changing from
   the server itself changing** — both are just a different `tools/list`
   response over the same transport, and MCP has no field that separates
-  them. So `toollock verify` against a proxy server (e.g.
-  `@sentry/mcp-server`, `@stripe/mcp` — anything that forwards
-  `tools/list` to a remote service) tracks *the remote backend*, not the
-  pinned npm package: `verify` can fail on a package that never changed,
-  and `update` re-baselines against whatever the backend served that
-  minute. This is real — the dataset's first measurement is exactly this
-  case (`docs/findings/2026-09-06-sentry-proxy-instability.md`: 9→22→9
-  tools in a day at a static version). **Mitigation:** the collector
-  measures `stableAcrossSpawns` per server (decision #20) and the README
-  will state that `verify` against a proxy tracks the backend. Naming
+  them. So `toollock verify` against a proxy server (anything that forwards
+  `tools/list` to a remote service) would track *the remote backend*,
+  not the pinned npm package: `verify` could fail on a package that never
+  changed, and `update` would re-baseline against whatever the backend
+  served that minute. **No instance observed yet.** The case first
+  recorded as one (`@sentry/mcp-server`, 9→22→9 tools) was two package
+  versions (decision #21), and its tool list is built locally.
+  **Mitigation:** the collector measures `stableAcrossSpawns` per server
+  (decision #20), and the README should state that `verify` against a
+  proxy tracks the backend if one turns up. Naming
   this is stronger than letting a user discover it through a CI failure
   on an unchanged dependency. Detecting it automatically in the CLI (a
   second spawn in `verify`, or a heuristic on response latency /

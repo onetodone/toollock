@@ -11,20 +11,35 @@ re-capture), the collector's commit message gains a **bucket-broken-out**
 drift count (`data: snapshot <date> (<N> servers, 1 drifted — 1
 list-env-gated)`, DECISIONS.md #20), and each capturable server now gets
 a measured **`stableAcrossSpawns`** field (one extra spawn,
-`src/collector/determinism.ts`). What's left in Phase 5: seed-list
-expansion — the seeded pseudorandom draw over the ~7,745 curation-bar
-survivors (method decided, DECISIONS.md #17) and the bucket probe over
-the drawn sample.
+`src/collector/determinism.ts`). Seed-list expansion is built but not
+run to completion: the seeded draw of 100 is committed
+(`data/seed-candidates-2026-09-06.json`), and the probe batch, its
+`workflow_dispatch` workflow and `scripts/build-seed-list.ts` exist. Both
+probe runs on 2026-09-06 were cancelled (one at the workflow's 60-minute `timeout-minutes`), so
+no probe results exist yet and the collector still runs v1's 10 servers.
 
-**The dataset produced its first real measurement, and it's a finding:**
-`@sentry/mcp-server@0.39.0` returned 9 → 22 → 9 tools within 24h at a
-static version (`docs/findings/2026-09-06-sentry-proxy-instability.md`).
-It's a proxy — `tools/list` forwards to a hosted backend — so its tool
-list isn't a function of the npm package, which breaks the lockfile's
-same-input-same-output premise for that class of server. Drove
-DECISIONS.md #20 and a new Known-limitation entry. The 2026-09-05 →
-2026-09-06 drift is therefore 1 (one `list-env-gated` server), not the
-zero that was predicted — and `drift.test.ts` pins that.
+**The collector measured the wrong Sentry version for a month (found
+2026-10-08).** The 31 scheduled runs from 2026-09-07 to 2026-10-07 all
+reported `0 drifted`. For 9 servers that's genuine: no releases in the
+window, or releases that left the tools unchanged (checked by
+re-capturing `@latest` for Notion 2.5.2 and context7 4.2.0). For
+`@sentry/mcp-server` it wasn't. `collect.yml` ran Node 20, and Sentry
+requires `engines.node >=22.13` from 0.37.0 on, so npm installed
+**0.36.0** on every CI run while 0.40–0.42 shipped
+(`docs/findings/2026-09-06-sentry-node-engines-pin.md`, DECISIONS.md
+#21). The same cause explains the "first finding" that the 09-05 →
+09-06 drift (9 → 22 → 9 tools) was a proxy changing its tool list at a
+static version. 09-05 was local (Node 22 → 0.39.0, 9 tools) and 09-06
+was CI (Node 20 → 0.36.0, 22 tools). Sentry builds `tools/list` locally,
+and each version is byte-stable. Fixed in three commits: both workflows
+now run Node 22 (`863558b`); the collector resolves the `latest`
+dist-tag, spawns `<pkg>@<version>` exactly and records `observedVersion`
+per server (`15016e1`); and the finding, DECISIONS.md #20, the
+Known-limitation entry and PLAN.md are corrected (this commit).
+`stableAcrossSpawns` and the bucket breakout stay as precautions.
+**Expect the first post-fix scheduled run to report Sentry drifting
+22 → 9 (`1 drifted — 1 list-env-gated`).** That is the real
+0.36.0 → 0.42.0 change landing once, not instability.
 
 See `docs/spikes/phase-0.md` for Phase 0's spike notes and the Phase log
 below for how each phase concluded.
@@ -215,18 +230,28 @@ what's genuinely still unresolved.
   — inert during active development, but worth a line in Phase 6's
   operational notes once commit cadence drops to weekly and the
   collector's own commits are the only thing resetting that timer.
-- Phase 5's seed-list **selection method is decided** (DECISIONS.md #17):
-  a seeded pseudorandom draw over the ~7,745 curation-bar survivors,
-  survivor list pinned as a data artifact, seed recorded in
-  `data/seed-list.json`. **Still to build:** the draw itself and the
-  bucket probe over the drawn sample. (Drift computation and
-  `stableAcrossSpawns` — the other Phase 5 pieces — are done.)
-- **Proxy servers and the next scheduled runs.** `sentry-mcp-server` will
-  likely show drift on most runs until its backend stabilises (each run
-  compares against whatever tool count the previous run happened to
-  catch). That's expected and the bucket breakout keeps it legible in
-  the commit log — a `list-env-gated`-only drift count is noise, a
-  `list-open` one is signal. If a `list-open` server ever shows drift,
+- Phase 5's seed-list expansion (DECISIONS.md #17): the draw is done;
+  **still to do:** a probe run that completes (both 2026-09-06 attempts
+  were cancelled, one at the workflow's 60-minute `timeout-minutes`), then
+  `scripts/build-seed-list.ts` over its results. The probe still spawns
+  a bare `npx -y <pkg>` (`src/collector/probe.ts`). On Node 22 that's
+  usually `latest`, but a candidate requiring a newer Node would quietly
+  be probed at an older version. Worth pinning the same way as the
+  collector (DECISIONS.md #21) before the run.
+- **Drift and versions.** Snapshots now carry `observedVersion`, but
+  `src/collector/drift.ts` doesn't compare it. A release with unchanged
+  tools isn't drift and shouldn't be counted, but surfacing version
+  changes alongside the count would make hand-diffs faster.
+- `src/lock/observedVersion.ts` (used by `toollock init`) picks the npx
+  cache entry with the newest `package.json` mtime. With several cached
+  installs of one package, that's the most recently *installed* version,
+  which isn't necessarily the one just spawned (seen locally on
+  2026-10-08: cached 0.36.0/0.39.0/0.42.0 of Sentry). Fine on a fresh CI
+  runner, but it can mislabel on a developer machine.
+- **Reading the drift count.** A `list-env-gated`-only drift count
+  usually means placeholder-credential churn; a `list-open` one is
+  the signal. Either way, compare `observedVersion` on both sides first.
+  If a `list-open` server ever shows drift,
   hand-diff the two snapshots before trusting the classifier
   (`src/collector/drift.ts` is hash-level only — it says *that* a hash
   moved, not *what* changed; that detail needs `tools.lock`-style full

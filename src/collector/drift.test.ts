@@ -10,9 +10,11 @@ const snapshot = (name: string): SnapshotFile =>
 
 // PLAN.md Phase 5 test: "replay two saved snapshots and confirm the
 // drift count matches a hand count of changed hashes." The hand count
-// is in docs/findings/2026-09-06-sentry-proxy-instability.md: exactly
+// is in docs/findings/2026-09-06-sentry-node-engines-pin.md: exactly
 // one server drifted (sentry-mcp-server, list-env-gated), 9 tools -> 22,
-// all 7 shared tools' schemaHash moved.
+// all 7 shared tools' schemaHash moved. The cause was two different
+// package versions (local Node 22 -> 0.39.0, CI Node 20 -> 0.36.0;
+// DECISIONS.md #21), not an unstable server -- the count is still right.
 test("computeSnapshotDrift: 2026-09-05 -> 2026-09-06 is exactly one list-env-gated server", () => {
   const drift = computeSnapshotDrift(snapshot("2026-09-05"), snapshot("2026-09-06"));
 
