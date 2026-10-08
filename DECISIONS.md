@@ -1098,6 +1098,49 @@ the protocol alone, and the honest response is to measure what it can
 (adjacent-spawn stability), name what it can't (below), and make sure
 the published drift numbers can't be misread.
 
+## 21. The collector runs on Node 22 (corrects #20's premise)
+
+**Context:** 31 consecutive scheduled runs (2026-09-07 → 2026-10-07)
+reported `0 drifted`, with `sentry-mcp-server` at 22 tools every day,
+while `@sentry/mcp-server` shipped 0.40.0, 0.41.0 and 0.42.0 in that
+window. A local re-capture at `@latest` returned 9 tools. The cause is
+npm's version resolution, not the server: for a bare `npx -y <pkg>`,
+npm picks the newest version whose `engines.node` accepts the running
+Node, and only falls back to the `latest` tag when that one qualifies.
+`@sentry/mcp-server` declares `engines.node >=22.13` from 0.37.0 on;
+`collect.yml` ran Node 20, so every CI run installed **0.36.0** — a
+month-old release — without a warning. Checked, not inferred: under
+Node 20, `npx` installs 0.36.0 while `npm view` reports 0.42.0, and a
+capture of `@sentry/mcp-server@0.36.0` reproduces the CI snapshot's 22
+tools with every hash identical.
+
+This also explains the 09-05 → 09-06 "proxy instability" that decision
+#20 was built on: 09-05 was a local run (Node 22 → 0.39.0 → 9 tools),
+09-06 was the first CI run (Node 20 → 0.36.0 → 22 tools), and the
+09-06 re-probes were local again (9 tools). Two package versions, not
+one backend changing its mind. In 0.42.0 the 9-tool list is a
+hardcoded constant in the package (`TOP_LEVEL_TOOL_NAMES`), and
+`tools/list` is answered locally.
+
+**Decision:** both workflows (`collect.yml`, `probe-seed-candidates.yml`)
+run Node 22. That alone fixes the observed case; it doesn't make the
+collector immune to the next package that raises its floor past
+whatever Node CI runs.
+
+**Alternatives rejected:**
+
+- Node 24 — would also work today; 22 is the smallest step that covers
+  every seed package's `engines` and matches the version this project
+  is developed on. Revisit when a seed package needs more.
+- Leaving Node 20 and adding `--engine-strict` — that turns the silent
+  downgrade into a hard install failure, which is louder but measures
+  nothing; the dataset should capture the version users actually get.
+
+**Why:** the dataset's claim is "what does `<pkg>` expose today". A
+collector that quietly measures a different version than `latest`
+answers a different question, and its zero-drift result looked exactly
+like a correct one for a month.
+
 ## Known limitations
 
 - A legitimate upstream server version bump can trigger `prompt-drift`
