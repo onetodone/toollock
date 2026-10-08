@@ -1,5 +1,6 @@
 import { capture } from "../mcp/capture.js";
 import { connect, killTransport, npxServerSpec, withTimeout, type ConnectedServer } from "../mcp/connect.js";
+import { resolveLatestVersion } from "./version.js";
 
 /**
  * The automated `tools/list` enumeration probe (DECISIONS.md #12, Phase 0
@@ -24,6 +25,8 @@ export interface ProbeOutcome {
   prompts: number | null;
   serverName: string | null;
   serverVersion: string | null;
+  /** The `latest` dist-tag version, resolved first and then spawned exactly (DECISIONS.md #21). `null` when resolution failed. */
+  observedVersion: string | null;
   durationMs: number;
   /** Error text for the two failure buckets; `null` for `list-open`. */
   detail: string | null;
@@ -41,11 +44,15 @@ export const PROBE_HARD_CEILING_MS = 120_000;
 export async function probeCandidate(pkg: string, hardCeilingMs: number = PROBE_HARD_CEILING_MS): Promise<ProbeOutcome> {
   const start = Date.now();
   let connected: ConnectedServer | null = null;
+  let observedVersion: string | null = null;
 
   try {
     const open = await withTimeout(
       (async () => {
-        connected = await connect(npxServerSpec(pkg)); // no env — the zero-env probe (DECISIONS.md #12)
+        // A failed resolution lands in the catch below like any other
+        // install failure — never a fallback to an unpinned spawn.
+        observedVersion = await resolveLatestVersion(pkg);
+        connected = await connect(npxServerSpec(`${pkg}@${observedVersion}`)); // no env — the zero-env probe (DECISIONS.md #12)
         const result = await capture(connected);
         return {
           bucket: "list-open" as const,
@@ -59,10 +66,10 @@ export async function probeCandidate(pkg: string, hardCeilingMs: number = PROBE_
       hardCeilingMs,
       `hard ceiling for ${pkg}`,
     );
-    return { package: pkg, ...open, durationMs: Date.now() - start };
+    return { package: pkg, ...open, observedVersion, durationMs: Date.now() - start };
   } catch (err) {
     const { bucket, detail } = classifyProbeError(err);
-    return { package: pkg, bucket, tools: null, prompts: null, serverName: null, serverVersion: null, detail, durationMs: Date.now() - start };
+    return { package: pkg, bucket, tools: null, prompts: null, serverName: null, serverVersion: null, observedVersion, detail, durationMs: Date.now() - start };
   } finally {
     if (connected) killTransport((connected as ConnectedServer).transport);
   }

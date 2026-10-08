@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { classifyProbeError, probeAll, tallyBuckets, type ProbeOutcome } from "./probe.js";
 
 function outcome(pkg: string, bucket: ProbeOutcome["bucket"]): ProbeOutcome {
-  return { package: pkg, bucket, tools: bucket === "list-open" ? 3 : null, prompts: null, serverName: null, serverVersion: null, durationMs: 10, detail: null };
+  return { package: pkg, bucket, tools: bucket === "list-open" ? 3 : null, prompts: null, serverName: null, serverVersion: null, observedVersion: null, durationMs: 10, detail: null };
 }
 
 test("classifyProbeError: our own timeout message is list-timeout, anything else is list-auth-required", () => {

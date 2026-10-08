@@ -1,4 +1,7 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 /**
  * The version the `latest` dist-tag points at right now, which the
@@ -11,12 +14,12 @@ import { execFileSync } from "node:child_process";
  * `src/lock/observedVersion.ts` does for `toollock init`, where the user's
  * own spec is spawned as given).
  */
-export function resolveLatestVersion(packageName: string): string {
-  const out = execFileSync("npm", ["view", packageName, "dist-tags.latest"], {
+export async function resolveLatestVersion(packageName: string): Promise<string> {
+  const { stdout } = await execFileAsync("npm", ["view", packageName, "dist-tags.latest"], {
     encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
     timeout: 30_000,
-  }).trim();
-  if (!out) throw new Error(`npm view ${packageName} returned no latest dist-tag`);
-  return out;
+  });
+  const version = stdout.trim();
+  if (!version) throw new Error(`npm view ${packageName} returned no latest dist-tag`);
+  return version;
 }

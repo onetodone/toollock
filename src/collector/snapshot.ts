@@ -95,7 +95,7 @@ export async function snapshotServer(spec: SeedServerSpec): Promise<ServerSnapsh
   }
 
   try {
-    const observedVersion = resolveLatestVersion(spec.package);
+    const observedVersion = await resolveLatestVersion(spec.package);
     base.observedVersion = observedVersion;
     const pinned: SeedServerSpec = { ...spec, package: `${spec.package}@${observedVersion}` };
 

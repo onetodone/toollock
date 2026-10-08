@@ -233,11 +233,10 @@ what's genuinely still unresolved.
 - Phase 5's seed-list expansion (DECISIONS.md #17): the draw is done;
   **still to do:** a probe run that completes (both 2026-09-06 attempts
   were cancelled, one at the workflow's 60-minute `timeout-minutes`), then
-  `scripts/build-seed-list.ts` over its results. The probe still spawns
-  a bare `npx -y <pkg>` (`src/collector/probe.ts`). On Node 22 that's
-  usually `latest`, but a candidate requiring a newer Node would quietly
-  be probed at an older version. Worth pinning the same way as the
-  collector (DECISIONS.md #21) before the run.
+  `scripts/build-seed-list.ts` over its results. The probe now pins
+  `<pkg>@<latest>` and records `observedVersion` like the collector
+  (DECISIONS.md #21). The 60-minute ceiling is the open question for
+  the next attempt, not the version.
 - **Drift and versions.** Snapshots now carry `observedVersion`, but
   `src/collector/drift.ts` doesn't compare it. A release with unchanged
   tools isn't drift and shouldn't be counted, but surfacing version

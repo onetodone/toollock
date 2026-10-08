@@ -1138,7 +1138,10 @@ hardcoded constant in the package (`TOP_LEVEL_TOOL_NAMES`), and
 2. **The collector resolves the `latest` dist-tag first and spawns that
    exact version** (`npm view <pkg> dist-tags.latest`, then
    `npx -y <pkg>@<version>` for both the capture and the
-   `stableAcrossSpawns` recheck — `src/collector/version.ts`). An exact
+   `stableAcrossSpawns` recheck — `src/collector/version.ts`). The
+   seed-candidate probe (`src/collector/probe.ts`) does the same and
+   records `observedVersion` per outcome; a package that won't resolve
+   is bucketed like any other install failure. An exact
    version bypasses npm's engines preference and a warm npx cache alike,
    so the result no longer depends on the runner's Node or on what's
    already installed. The resolved version is recorded per server as
