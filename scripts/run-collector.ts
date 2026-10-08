@@ -39,7 +39,7 @@ async function main() {
     } else if (snapshot.tools) {
       console.log(
         `  ${snapshot.tools.length} tool(s), ${snapshot.prompts?.length ?? 0} prompt(s), ` +
-          `schemaReuseRatio=${snapshot.schemaReuseRatio ?? "null"}, stableAcrossSpawns=${snapshot.stableAcrossSpawns ?? "null"}`,
+          `observedVersion=${snapshot.observedVersion}, schemaReuseRatio=${snapshot.schemaReuseRatio ?? "null"}, stableAcrossSpawns=${snapshot.stableAcrossSpawns ?? "null"}`,
       );
       if (snapshot.spawnVariance) for (const v of snapshot.spawnVariance) console.log(`    spawn variance: ${v}`);
     } else {

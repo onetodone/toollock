@@ -3,6 +3,7 @@ import { connect, killTransport, npxServerSpec } from "../mcp/connect.js";
 import { computePromptHashes, computeToolHashes } from "../schema/hash.js";
 import { computeServerTokenCounts } from "../schema/tokens.js";
 import { measureSpawnStability, type HashPair } from "./determinism.js";
+import { resolveLatestVersion } from "./version.js";
 
 export type SeedBucket = "list-open" | "list-env-gated" | "list-auth-required" | "list-timeout";
 
@@ -39,6 +40,12 @@ export interface ServerSnapshot {
   name: string;
   package: string;
   bucket: SeedBucket;
+  /**
+   * The exact npm version captured: the `latest` dist-tag, resolved before
+   * the spawn and then spawned as `<pkg>@<version>` (DECISIONS.md #21).
+   * Absent for servers that were never spawned, or whose resolution failed.
+   */
+  observedVersion?: string;
   capturedAt: string;
   note?: string;
   caveat?: string;
@@ -89,10 +96,14 @@ export async function snapshotServer(spec: SeedServerSpec): Promise<ServerSnapsh
   }
 
   try {
+    const observedVersion = resolveLatestVersion(spec.package);
+    base.observedVersion = observedVersion;
+    const pinned: SeedServerSpec = { ...spec, package: `${spec.package}@${observedVersion}` };
+
     let tools: ToolRecord[] = [];
     let prompts: PromptRecord[] = [];
     let snapshot: ServerSnapshot;
-    const server = await connect({ ...npxServerSpec(spec.package, spec.spawnArgs ?? []), env: spec.promotionEnv });
+    const server = await connect({ ...npxServerSpec(pinned.package, pinned.spawnArgs ?? []), env: pinned.promotionEnv });
     try {
       const result = await capture(server);
       const tokenCounts = computeServerTokenCounts(result.tools, result.wireTools.raw);
@@ -138,7 +149,7 @@ export async function snapshotServer(spec: SeedServerSpec): Promise<ServerSnapsh
 
     const toHashMap = (records: Array<{ name: string } & HashPair>): Map<string, HashPair> =>
       new Map(records.map((r) => [r.name, { schemaHash: r.schemaHash, promptHash: r.promptHash }]));
-    const stability = await measureSpawnStability(spec, { tools: toHashMap(tools), prompts: toHashMap(prompts) });
+    const stability = await measureSpawnStability(pinned, { tools: toHashMap(tools), prompts: toHashMap(prompts) });
 
     return { ...snapshot, ...stability };
   } catch (err) {

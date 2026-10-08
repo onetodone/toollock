@@ -1122,13 +1122,36 @@ one backend changing its mind. In 0.42.0 the 9-tool list is a
 hardcoded constant in the package (`TOP_LEVEL_TOOL_NAMES`), and
 `tools/list` is answered locally.
 
-**Decision:** both workflows (`collect.yml`, `probe-seed-candidates.yml`)
-run Node 22. That alone fixes the observed case; it doesn't make the
-collector immune to the next package that raises its floor past
-whatever Node CI runs.
+**Decision:**
+
+1. Both workflows (`collect.yml`, `probe-seed-candidates.yml`) run
+   Node 22. That alone fixes the observed case; it doesn't make the
+   collector immune to the next package that raises its floor past
+   whatever Node CI runs.
+2. **The collector resolves the `latest` dist-tag first and spawns that
+   exact version** (`npm view <pkg> dist-tags.latest`, then
+   `npx -y <pkg>@<version>` for both the capture and the
+   `stableAcrossSpawns` recheck — `src/collector/version.ts`). An exact
+   version bypasses npm's engines preference and a warm npx cache alike,
+   so the result no longer depends on the runner's Node or on what's
+   already installed. The resolved version is recorded per server as
+   `observedVersion` in every snapshot; its absence is what let this go
+   unnoticed for a month. A failed resolution is a recorded `error` for
+   that server, never a silent fallback to a bare spawn.
+
+   This reuses the pre-spawn `npm view` that PROGRESS.md's "Do not
+   retry" list marks as superseded — for a different job. There it was
+   a way to *learn* `observedVersion`, and reading the npx cache
+   afterwards gave the same answer for free. Here it *chooses* the
+   version, which the cache read can't do. `toollock init`/`verify` keep
+   the cache read: they spawn the user's spec as given.
 
 **Alternatives rejected:**
 
+- Point 1 alone — fixes Sentry today and leaves the next engines bump
+  to fail the same silent way. Point 2 alone would have been enough, but
+  running CI on an end-of-life Node (20, EOL April 2026) is its own
+  problem.
 - Node 24 — would also work today; 22 is the smallest step that covers
   every seed package's `engines` and matches the version this project
   is developed on. Revisit when a seed package needs more.
