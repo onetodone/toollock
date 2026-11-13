@@ -1,0 +1,1714 @@
+{
+  "date": "2026-11-13",
+  "capturedAt": "2026-11-13T14:00:04.460Z",
+  "servers": [
+    {
+      "name": "server-filesystem",
+      "package": "@modelcontextprotocol/server-filesystem",
+      "bucket": "list-open",
+      "capturedAt": "2026-11-13T13:59:34.760Z",
+      "observedVersion": "2.3.0",
+      "tools": [
+        {
+          "name": "read_file",
+          "schemaHash": "e45793efac1de37e7f4e86569dc5bd610497d97b840e897f8729a85c1bf5529d",
+          "promptHash": "4ba78df918f11b46643e9140e198382cd055d521af72d0aca1f7309f82659574",
+          "canonicalTokens": 162,
+          "wireTokens": 238,
+          "wireBasisTokens": 160,
+          "refCount": 0
+        },
+        {
+          "name": "read_text_file",
+          "schemaHash": "e45793efac1de37e7f4e86569dc5bd610497d97b840e897f8729a85c1bf5529d",
+          "promptHash": "9c236f67e80c8e6d2970bd24d90e85b062cad6d3b005ce79823434e612a10793",
+          "canonicalTokens": 241,
+          "wireTokens": 315,
+          "wireBasisTokens": 239,
+          "refCount": 0
+        },
+        {
+          "name": "read_media_file",
+          "schemaHash": "4b4a8be13a643b7eb99dc471a28cc1baf3da91fe3e5380c1f2b21c584eed7189",
+          "promptHash": "d4ce34ab77feb2a04ceb0d74348822637daa4beabf4e4e48feb4544d5b28b411",
+          "canonicalTokens": 127,
+          "wireTokens": 331,
+          "wireBasisTokens": 127,
+          "refCount": 0
+        },
+        {
+          "name": "read_multiple_files",
+          "schemaHash": "3e93cbd767522810e6a3b118a0b1c82002186fbcb3f7e662a21aaeb5449d5f6b",
+          "promptHash": "e4c3b26b5887997f2a234f2592042fb7f8027a0153f84620af204bb0da144ed1",
+          "canonicalTokens": 142,
+          "wireTokens": 218,
+          "wireBasisTokens": 142,
+          "refCount": 0
+        },
+        {
+          "name": "write_file",
+          "schemaHash": "252f884270f586755b1fe8a1d0d4da314547f047026e613d58a1a708e688aaa3",
+          "promptHash": "c31db1f060452ff196afd5c804308beea0c9e7b854474ad502d421f0231f6535",
+          "canonicalTokens": 147,
+          "wireTokens": 221,
+          "wireBasisTokens": 146,
+          "refCount": 0
+        },
+        {
+          "name": "append_file",
+          "schemaHash": "252f884270f586755b1fe8a1d0d4da314547f047026e613d58a1a708e688aaa3",
+          "promptHash": "7055d042f7403e77b6181fd76e7f38f0aa4d735aaa2c931f7bc3abba0438bb58",
+          "canonicalTokens": 188,
+          "wireTokens": 263,
+          "wireBasisTokens": 188,
+          "refCount": 0
+        },
+        {
+          "name": "edit_file",
+          "schemaHash": "af2172a15e15aac0c75489c7ea2cd9bbe7f992b25a2af33df6235d25a36caeac",
+          "promptHash": "072c0ad7964480c318b2b15c027e35aca88041140313e531fcc1e00ca093232c",
+          "canonicalTokens": 340,
+          "wireTokens": 413,
+          "wireBasisTokens": 338,
+          "refCount": 0
+        },
+        {
+          "name": "create_directory",
+          "schemaHash": "4b4a8be13a643b7eb99dc471a28cc1baf3da91fe3e5380c1f2b21c584eed7189",
+          "promptHash": "7d910003b9055d6f881bd6e7db6c24ab443bfdc5effcdb0ae921f94d266099ea",
+          "canonicalTokens": 135,
+          "wireTokens": 210,
+          "wireBasisTokens": 135,
+          "refCount": 0
+        },
+        {
+          "name": "list_directory",
+          "schemaHash": "4b4a8be13a643b7eb99dc471a28cc1baf3da91fe3e5380c1f2b21c584eed7189",
+          "promptHash": "0a19b8e2de30a4636086dc3bdaf166f9a9862218a69218cc078052b495c0e447",
+          "canonicalTokens": 142,
+          "wireTokens": 217,
+          "wireBasisTokens": 142,
+          "refCount": 0
+        },
+        {
+          "name": "list_directory_with_sizes",
+          "schemaHash": "568f14868642d9acc2e7df8c5b009761f377c75a71a7f0cc4254b1d0c6c437da",
+          "promptHash": "9f78562ee111735ab52c258f82d2c957aabe5b7aa7d3bde2f90f2a59e7ff07d4",
+          "canonicalTokens": 180,
+          "wireTokens": 256,
+          "wireBasisTokens": 179,
+          "refCount": 0
+        },
+        {
+          "name": "directory_tree",
+          "schemaHash": "f2d5cdb9a18cb1825c42b8ba45022e507b0ac33049566fad277d7f0c39425f33",
+          "promptHash": "631749fe290d2fab1f6278caca00d881ee281760476be928d280089a379eb915",
+          "canonicalTokens": 317,
+          "wireTokens": 390,
+          "wireBasisTokens": 315,
+          "refCount": 0
+        },
+        {
+          "name": "move_file",
+          "schemaHash": "b82496b1df2e8a154121f05b09c7415a83c3def71cc6dc07b63d93a89bd110dc",
+          "promptHash": "d642c00d13f1fc8cf10232f49feb882ec50f4557bb97cf19a844b4c6edada476",
+          "canonicalTokens": 174,
+          "wireTokens": 249,
+          "wireBasisTokens": 174,
+          "refCount": 0
+        },
+        {
+          "name": "copy_file",
+          "schemaHash": "b82496b1df2e8a154121f05b09c7415a83c3def71cc6dc07b63d93a89bd110dc",
+          "promptHash": "4e2e827124841cb79cc554aae89bac9b9eb1bcef656ab59192d1af6a9c7618dd",
+          "canonicalTokens": 135,
+          "wireTokens": 209,
+          "wireBasisTokens": 134,
+          "refCount": 0
+        },
+        {
+          "name": "search_files",
+          "schemaHash": "ac6f00d983f1f2826bd83a2340da0606d225cd860899852d3ac5c0c50fd95af0",
+          "promptHash": "91db2d8080f897e2ecb682ea05e0ffeee5aa1bb478e8ad60ebac0823d3a16376",
+          "canonicalTokens": 304,
+          "wireTokens": 377,
+          "wireBasisTokens": 302,
+          "refCount": 0
+        },
+        {
+          "name": "get_file_info",
+          "schemaHash": "4b4a8be13a643b7eb99dc471a28cc1baf3da91fe3e5380c1f2b21c584eed7189",
+          "promptHash": "39450067ad04d2a9efe93066b370b6e3f3cb42b11e653295a925f029c77b8d40",
+          "canonicalTokens": 124,
+          "wireTokens": 200,
+          "wireBasisTokens": 124,
+          "refCount": 0
+        },
+        {
+          "name": "list_allowed_directories",
+          "schemaHash": "9640717f9632594bd2c52b3187086c2055984c483d4e5a6e1908d5e025bc7af5",
+          "promptHash": "768bec84f164450e328af38ccba8ee24918ab6dfc4eb3e69f437c061321ef809",
+          "canonicalTokens": 80,
+          "wireTokens": 157,
+          "wireBasisTokens": 80,
+          "refCount": 0
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 2938,
+      "wireTokens": 4264,
+      "wireBasisTokens": 2925,
+      "frameTokens": 2,
+      "contextBudget": 4266,
+      "refCount": 0,
+      "schemaReuseRatio": 0.995575221238938,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "server-memory",
+      "package": "@modelcontextprotocol/server-memory",
+      "bucket": "list-open",
+      "capturedAt": "2026-11-13T13:59:37.404Z",
+      "observedVersion": "2.1.1",
+      "tools": [
+        {
+          "name": "create_entities",
+          "schemaHash": "f760d2fcf1dd02cd3b021bebf817d1f094c16ff52b95e98d1ffe49df310b92be",
+          "promptHash": "fec10161ba832504574217a5c179d2ccfb12a30b0b35810f586381d890d9716c",
+          "canonicalTokens": 200,
+          "wireTokens": 369,
+          "wireBasisTokens": 198,
+          "refCount": 0
+        },
+        {
+          "name": "create_relations",
+          "schemaHash": "be13ade6926ebf184c415dd845b087856e4d4ad62c8598a426194aa25f943ba4",
+          "promptHash": "bc21312df50eba1b6a00b78a164f211231f5b87ef625c28f93a0a4ec4a106389",
+          "canonicalTokens": 164,
+          "wireTokens": 314,
+          "wireBasisTokens": 162,
+          "refCount": 0
+        },
+        {
+          "name": "add_observations",
+          "schemaHash": "29209e0a3ded8de7495f5c25c45bc1ac020934773a715d544d28eee52a7b3bb1",
+          "promptHash": "3dcf39f75b69dfb6a3f6cff5abe5950dc0f5489df00f8688fe998895ddbaef29",
+          "canonicalTokens": 151,
+          "wireTokens": 271,
+          "wireBasisTokens": 149,
+          "refCount": 0
+        },
+        {
+          "name": "delete_entities",
+          "schemaHash": "478c49bc26392588bce9dfa5984c915669612b9423e3ae1f1714e4c4da0c5431",
+          "promptHash": "52f667d1b2e55953d9e7b86bde896475742a9cd9eb921026f816305f723ab641",
+          "canonicalTokens": 132,
+          "wireTokens": 215,
+          "wireBasisTokens": 131,
+          "refCount": 0
+        },
+        {
+          "name": "delete_observations",
+          "schemaHash": "264ab3605be26167ea54dc2c8c4c4bd4d2adc26b404617e49d54a55e5457c9e9",
+          "promptHash": "0ef5727b742cc795f9874dc340df6bddf7b78b1d5be6b3150a123260c60fa2e3",
+          "canonicalTokens": 142,
+          "wireTokens": 225,
+          "wireBasisTokens": 140,
+          "refCount": 0
+        },
+        {
+          "name": "delete_relations",
+          "schemaHash": "be13ade6926ebf184c415dd845b087856e4d4ad62c8598a426194aa25f943ba4",
+          "promptHash": "b39fb3081e288412ed139b4d44bd2d0646ce255d8fde380ec8864a9dbf64d521",
+          "canonicalTokens": 208,
+          "wireTokens": 290,
+          "wireBasisTokens": 206,
+          "refCount": 0
+        },
+        {
+          "name": "read_graph",
+          "schemaHash": "ed654d688c78ed5809d60e0d4567a9a462a5e8dcad58350c6386b50a0efab671",
+          "promptHash": "6892a54f3eaedf72124bb325d535b4c90f46fc45669baf6764478d7de710c16b",
+          "canonicalTokens": 231,
+          "wireTokens": 513,
+          "wireBasisTokens": 229,
+          "refCount": 0
+        },
+        {
+          "name": "search_nodes",
+          "schemaHash": "4a60bae0824d41aeb728099532133723a512805827860e3853a2b37981d6a13a",
+          "promptHash": "de66472602d04227ff22bd66f7b6eaf7e20b230d56a8d8e7463120606f5bb353",
+          "canonicalTokens": 292,
+          "wireTokens": 574,
+          "wireBasisTokens": 290,
+          "refCount": 0
+        },
+        {
+          "name": "open_nodes",
+          "schemaHash": "b21bf28533451f8e631e510d7ff91a4fbca878ccee5f0d5ec99cc91e6e6ef57b",
+          "promptHash": "43186f67dd9e0f2b5a522e2f1160afaa4c92865a251e516800ea4f999b78e365",
+          "canonicalTokens": 232,
+          "wireTokens": 515,
+          "wireBasisTokens": 231,
+          "refCount": 0
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 1752,
+      "wireTokens": 3286,
+      "wireBasisTokens": 1736,
+      "frameTokens": 2,
+      "contextBudget": 3288,
+      "refCount": 0,
+      "schemaReuseRatio": 0.9908675799086758,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "server-everything",
+      "package": "@modelcontextprotocol/server-everything",
+      "bucket": "list-open",
+      "capturedAt": "2026-11-13T13:59:39.695Z",
+      "observedVersion": "2.3.0",
+      "tools": [
+        {
+          "name": "echo",
+          "schemaHash": "32ed6289a3e112f96f9c707a95ed61e415abb1522527708e11b659b2978b5d67",
+          "promptHash": "8b422e0fd4ad3c510d8ff33813c955333ea8b608f30d37a7b6c2a52f164ecd1c",
+          "canonicalTokens": 59,
+          "wireTokens": 635,
+          "wireBasisTokens": 58,
+          "refCount": 0
+        },
+        {
+          "name": "get-annotated-message",
+          "schemaHash": "b58392ed9d84c8755503815295e9f42a8d14a8be7e38fd7d762822db71ea4fab",
+          "promptHash": "7f1b8c508fd667014f0ea52f14cf0b51da9bdebe631e7b9b18e52e551e29f598",
+          "canonicalTokens": 107,
+          "wireTokens": 686,
+          "wireBasisTokens": 106,
+          "refCount": 0
+        },
+        {
+          "name": "get-env",
+          "schemaHash": "9640717f9632594bd2c52b3187086c2055984c483d4e5a6e1908d5e025bc7af5",
+          "promptHash": "641396ef0ff0295a16971d1fec9fe493d8508b3835a0d76e072d1ba2f47ca745",
+          "canonicalTokens": 105,
+          "wireTokens": 683,
+          "wireBasisTokens": 105,
+          "refCount": 0
+        },
+        {
+          "name": "get-header-params",
+          "schemaHash": "336800e0b5fd32dd2f71d2fef4c7c60ed37ed3c26740300ff6c52f0fbb337f5b",
+          "promptHash": "06f5b97100439af6cc97cce07254826756d6c74bade81e706286bfc227df8fdc",
+          "canonicalTokens": 180,
+          "wireTokens": 855,
+          "wireBasisTokens": 179,
+          "refCount": 0
+        },
+        {
+          "name": "get-resource-links",
+          "schemaHash": "3aa455c7d1bd199f644df84e3a5c32c534c65e6e10ffd0540c23f64f779d15c8",
+          "promptHash": "6b94ffc7b8511b6a586fd84f881ca7732752748797cf46f20753f0ed069d46f7",
+          "canonicalTokens": 82,
+          "wireTokens": 660,
+          "wireBasisTokens": 81,
+          "refCount": 0
+        },
+        {
+          "name": "get-resource-reference",
+          "schemaHash": "c576a4f5f5df8501713b3586d003cd4d926f8f0ba0d87be0c2166012e8834b9b",
+          "promptHash": "669fef2a3ac4e66e39b49698dbbac11cf6ac31b79d0436c06d8cfd436796fe9c",
+          "canonicalTokens": 108,
+          "wireTokens": 685,
+          "wireBasisTokens": 106,
+          "refCount": 0
+        },
+        {
+          "name": "get-structured-content",
+          "schemaHash": "1c93d239a5ac6e0df3ffdf7361ba28a2d313408b0bd57111d45fa0babcd8ed34",
+          "promptHash": "11ba6286008580fb911103c4358db12494526f88ca71d23539435dda0b74ebe0",
+          "canonicalTokens": 78,
+          "wireTokens": 735,
+          "wireBasisTokens": 77,
+          "refCount": 0
+        },
+        {
+          "name": "get-sum",
+          "schemaHash": "b04544f4a7a37b25137a8b0b83020302e4d63b474e5b665a70f23808cc15f5c4",
+          "promptHash": "bffa4dde77bc299e875e7658f472fd57c584d6fb58921e3202f567fc84d83f5e",
+          "canonicalTokens": 74,
+          "wireTokens": 651,
+          "wireBasisTokens": 73,
+          "refCount": 0
+        },
+        {
+          "name": "get-tiny-image",
+          "schemaHash": "9640717f9632594bd2c52b3187086c2055984c483d4e5a6e1908d5e025bc7af5",
+          "promptHash": "a1aa600a40c6c760fde8ab46d92366c8145c40ee13d476c48e4d573260675c4d",
+          "canonicalTokens": 46,
+          "wireTokens": 625,
+          "wireBasisTokens": 46,
+          "refCount": 0
+        },
+        {
+          "name": "gzip-file-as-resource",
+          "schemaHash": "f684b3f3915eec81cd494edf37d1a7e3c78a5411f8f96cc0b58169d40725b537",
+          "promptHash": "f3aed571d7c1f876f161471454f1479c673716034cb923bcdcce01d0a76f48f9",
+          "canonicalTokens": 245,
+          "wireTokens": 825,
+          "wireBasisTokens": 244,
+          "refCount": 0
+        },
+        {
+          "name": "trigger-list-changed",
+          "schemaHash": "fcb609d2188264cb90eb3306a673803bcd02e46caf9e28276c9f0bf5f46c682a",
+          "promptHash": "da8f3515d4ebc386c6750d823c4132f99a924a2f715775adf053606deaac644e",
+          "canonicalTokens": 121,
+          "wireTokens": 699,
+          "wireBasisTokens": 120,
+          "refCount": 0
+        },
+        {
+          "name": "trigger-log-messages",
+          "schemaHash": "9640717f9632594bd2c52b3187086c2055984c483d4e5a6e1908d5e025bc7af5",
+          "promptHash": "057399a78a62cff42b1c2819e3da0cfe14c56d19fe1e993d109990d895b273d0",
+          "canonicalTokens": 132,
+          "wireTokens": 711,
+          "wireBasisTokens": 132,
+          "refCount": 0
+        },
+        {
+          "name": "trigger-long-running-operation",
+          "schemaHash": "ef03d063d30e1dbfb729875f50d82ff3b1c9723aef60c5b893c009dd09cd856c",
+          "promptHash": "5ac90b5059efe1daa6319f390bfe76b134ec7c83611f570ff1f9fa6ad71a9099",
+          "canonicalTokens": 88,
+          "wireTokens": 667,
+          "wireBasisTokens": 87,
+          "refCount": 0
+        },
+        {
+          "name": "trigger-resource-update",
+          "schemaHash": "db8b594532025f2b9897419ee24dbbca5df22fbca94e690755aa5bb2e87b40cf",
+          "promptHash": "362782b6fa060b3a530ad73c3f60b9fb3fdba88dd09f6add50da95b6dfce06e6",
+          "canonicalTokens": 129,
+          "wireTokens": 707,
+          "wireBasisTokens": 128,
+          "refCount": 0
+        },
+        {
+          "name": "toggle-simulated-logging",
+          "schemaHash": "9640717f9632594bd2c52b3187086c2055984c483d4e5a6e1908d5e025bc7af5",
+          "promptHash": "5c14f6c39fc0e29a021b70ca37567330031aca2010c5dc2d91004fa7054dbc77",
+          "canonicalTokens": 92,
+          "wireTokens": 671,
+          "wireBasisTokens": 92,
+          "refCount": 0
+        },
+        {
+          "name": "toggle-subscriber-updates",
+          "schemaHash": "9640717f9632594bd2c52b3187086c2055984c483d4e5a6e1908d5e025bc7af5",
+          "promptHash": "ee4411027ea733356889b124aa011677b7f0b1d440315fdd2ca9d0632a5ba4d5",
+          "canonicalTokens": 87,
+          "wireTokens": 665,
+          "wireBasisTokens": 87,
+          "refCount": 0
+        }
+      ],
+      "prompts": [
+        {
+          "name": "simple-prompt",
+          "schemaHash": "a0ac9c3ac8a26494d358452c2f4a7b737e631a42cd704745ecbf6b50541afb99",
+          "promptHash": "572d617d2a696324b6354562e5ed79502d213806c755ca75b6056a2c89343edd"
+        },
+        {
+          "name": "args-prompt",
+          "schemaHash": "a56a5bd65d014f7e34be263df3d4b98abee4301be2bb3dc1cfc93fea2ddea609",
+          "promptHash": "f19e9cf7cfd865ba70a25057dbb6212ca98ca6aec8acb04ecbb72c597864a512"
+        },
+        {
+          "name": "completable-prompt",
+          "schemaHash": "1db1a5c208e161a220053d433eeba40bd08e91376bd82329d4634f69652468d1",
+          "promptHash": "1e1f31c27fcd869d882fc2d6f943adae8185c48074d737135587637e517c9f3b"
+        },
+        {
+          "name": "resource-prompt",
+          "schemaHash": "51fdeb82a309f28fba5a602e678eeb942078c5791a1b06b42ff64a9a3a4c895b",
+          "promptHash": "11c17322a7bd52effccb3205e27906584abcce6193067437177b5c739e392d01"
+        }
+      ],
+      "canonicalTokens": 1733,
+      "wireTokens": 11160,
+      "wireBasisTokens": 1721,
+      "frameTokens": 2,
+      "contextBudget": 11162,
+      "refCount": 0,
+      "schemaReuseRatio": 0.9930755914598961,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "server-sequential-thinking",
+      "package": "@modelcontextprotocol/server-sequential-thinking",
+      "bucket": "list-open",
+      "capturedAt": "2026-11-13T13:59:43.201Z",
+      "observedVersion": "2.1.1",
+      "tools": [
+        {
+          "name": "sequentialthinking",
+          "schemaHash": "36e6206996e4281743ff17d220b6ae49d7cf1f89a8e4e53d0cb23fb2810c7e38",
+          "promptHash": "8a252f04b4dab9795af8aa842092d77623754b573ac26baaa81709153d1f95dd",
+          "canonicalTokens": 491,
+          "wireTokens": 620,
+          "wireBasisTokens": 489,
+          "refCount": 0
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 491,
+      "wireTokens": 620,
+      "wireBasisTokens": 489,
+      "frameTokens": 2,
+      "contextBudget": 622,
+      "refCount": 0,
+      "schemaReuseRatio": 0.9959266802443992,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "context7-mcp",
+      "package": "@upstash/context7-mcp",
+      "bucket": "list-open",
+      "capturedAt": "2026-11-13T13:59:45.360Z",
+      "observedVersion": "4.7.0",
+      "tools": [
+        {
+          "name": "resolve-library-id",
+          "schemaHash": "9a7b72ca2c3fe500ad35a388a2ff77c76049fdf46a7625ccb815865039167829",
+          "promptHash": "5b96929ea5cec05cee81034e913ad07384f25086597764ef65822306d8bcb632",
+          "canonicalTokens": 608,
+          "wireTokens": 643,
+          "wireBasisTokens": 608,
+          "refCount": 0
+        },
+        {
+          "name": "query-docs",
+          "schemaHash": "fe77b6c2304e8f349efb03dff7dc24fd112bcc56fba48229e7fe5ee5f95947b6",
+          "promptHash": "69cf2431dcc6e48914c43cfd1022292c1849bf5e401f951378bfda4dc2171b9c",
+          "canonicalTokens": 455,
+          "wireTokens": 486,
+          "wireBasisTokens": 454,
+          "refCount": 0
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 1063,
+      "wireTokens": 1129,
+      "wireBasisTokens": 1062,
+      "frameTokens": 2,
+      "contextBudget": 1131,
+      "refCount": 0,
+      "schemaReuseRatio": 0.9990592662276576,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "notion-mcp-server",
+      "package": "@notionhq/notion-mcp-server",
+      "bucket": "list-open",
+      "capturedAt": "2026-11-13T13:59:50.260Z",
+      "note": "Hands out its full tool schema with zero env vars set; auth is enforced at tools/call time, not tools/list time (Phase 0 spike 3). list-open here means 'schema capturable without credentials', not 'usable without an account' — see DECISIONS.md #12.",
+      "observedVersion": "2.6.1",
+      "tools": [
+        {
+          "name": "API-get-user",
+          "schemaHash": "f3ddf77f825a9c07017822e71394096acb2a60b53af3c8b4615d5345f7266d1f",
+          "promptHash": "aa8df2d3e1b3aaed4db62ab025c58bedefd5e627bf5142f953b780b356a12424",
+          "canonicalTokens": 53,
+          "wireTokens": 604,
+          "wireBasisTokens": 591,
+          "refCount": 6
+        },
+        {
+          "name": "API-get-users",
+          "schemaHash": "00829a1de69fe830fd59a474af736d185f4100e4533572d19246b79d88c218d0",
+          "promptHash": "174d04b291b6303acbcd1ab3866b30d4658b19db19cad2c16fccf7dc258f00bc",
+          "canonicalTokens": 111,
+          "wireTokens": 663,
+          "wireBasisTokens": 649,
+          "refCount": 6
+        },
+        {
+          "name": "API-get-self",
+          "schemaHash": "c1c8361258ff37c68e15d3a296607d89985c87f5a520b2c736650532e4230278",
+          "promptHash": "fca564a64bbcaf21324c0781eba84aa3ef228db06382c057d2c2e1e81b734c1b",
+          "canonicalTokens": 43,
+          "wireTokens": 595,
+          "wireBasisTokens": 581,
+          "refCount": 6
+        },
+        {
+          "name": "API-post-search",
+          "schemaHash": "ae354693e7e7e59135e718225bd24c46e1a5f97bffa9d881da8389bc00cd34e7",
+          "promptHash": "e864e4df3ec710ee4305a61a5d6e9a293ae9403394ac683b72bdaf070ab6d3f3",
+          "canonicalTokens": 544,
+          "wireTokens": 1097,
+          "wireBasisTokens": 1083,
+          "refCount": 6
+        },
+        {
+          "name": "API-get-block-children",
+          "schemaHash": "9590b5188daa1b4396040c155fa258bdc7ed5900f7be0c102deaf85082929c0d",
+          "promptHash": "fc5b238a4df9ca048d41ee5c303ba4e703a8c470c4984483e1f33577f5c90a85",
+          "canonicalTokens": 141,
+          "wireTokens": 693,
+          "wireBasisTokens": 679,
+          "refCount": 6
+        },
+        {
+          "name": "API-patch-block-children",
+          "schemaHash": "fe7e59a089443b5fbd1fe07681548ba65450e288c4146221f553e70895989cf1",
+          "promptHash": "c5ef2cffb6c5fc972797cbc247d2cd24a00a33c7e2d4c9a90368e51657b0131b",
+          "canonicalTokens": 399,
+          "wireTokens": 713,
+          "wireBasisTokens": 699,
+          "refCount": 7
+        },
+        {
+          "name": "API-retrieve-a-block",
+          "schemaHash": "4d01fbe59cff7e6b4fe43a98ffa3c3b2596b4c9dd42845a72a5055454a0915e8",
+          "promptHash": "638e7e3b20672174e52772bf32edaeb00dc321fcb96f1da76acd902ae230d0e8",
+          "canonicalTokens": 60,
+          "wireTokens": 612,
+          "wireBasisTokens": 598,
+          "refCount": 6
+        },
+        {
+          "name": "API-update-a-block",
+          "schemaHash": "970a7727c167b84cccc765d6747b9266581b68e0acbdd81fbfddc75dad425325",
+          "promptHash": "0cbf03902374c0535705a2eb1eed08adfb275f72eddbc3927abe574375121e7e",
+          "canonicalTokens": 176,
+          "wireTokens": 727,
+          "wireBasisTokens": 713,
+          "refCount": 6
+        },
+        {
+          "name": "API-delete-a-block",
+          "schemaHash": "4d01fbe59cff7e6b4fe43a98ffa3c3b2596b4c9dd42845a72a5055454a0915e8",
+          "promptHash": "9c1e456c353f666e1e609d77c92704801527bce9c10c32483d2ec6236cf35cf8",
+          "canonicalTokens": 59,
+          "wireTokens": 611,
+          "wireBasisTokens": 597,
+          "refCount": 6
+        },
+        {
+          "name": "API-retrieve-a-page",
+          "schemaHash": "4dc295ba3bca60f5257d72097f383f69393eb285646c496faad725a1e5df2617",
+          "promptHash": "cbeb6ec0efb9150b5f20acf8c0dada1570d4640799a95daa84f377bdcec9d08a",
+          "canonicalTokens": 127,
+          "wireTokens": 680,
+          "wireBasisTokens": 666,
+          "refCount": 6
+        },
+        {
+          "name": "API-patch-page",
+          "schemaHash": "820b47121f784b2060ac54db8240a842870f2601f78bebc135786a2e8cee1a58",
+          "promptHash": "17c2f88c790b185b81ee3546819bc250fb7997b1cb90750ac796ff10095ad46c",
+          "canonicalTokens": 340,
+          "wireTokens": 889,
+          "wireBasisTokens": 876,
+          "refCount": 6
+        },
+        {
+          "name": "API-post-page",
+          "schemaHash": "419250a846b83355887edd8d5042405fd38126d19ebf2b51d75520893b725e69",
+          "promptHash": "8e9a81caad43cbb1d1d50d335a5917648316175ad44eae59947e93c3a7c8a156",
+          "canonicalTokens": 359,
+          "wireTokens": 819,
+          "wireBasisTokens": 806,
+          "refCount": 7
+        },
+        {
+          "name": "API-retrieve-a-page-property",
+          "schemaHash": "37e097304d9515571faba2496450a7d61c39decb30ad86dc167d715a0febf59e",
+          "promptHash": "9bfa0b7489e1d7385a0bc33220c06722719dfd0e5f91fb53e38c6e88b8e17dd3",
+          "canonicalTokens": 150,
+          "wireTokens": 704,
+          "wireBasisTokens": 689,
+          "refCount": 6
+        },
+        {
+          "name": "API-retrieve-a-comment",
+          "schemaHash": "a5679348fab1d4d86e87abd1a26020cb9275d315a83f3c5a8a049a1a7a26a1cd",
+          "promptHash": "21b1efc4803543df7bf7c50df9f82d8abeea7e6f5e2c1544a3d171dfbac43e0a",
+          "canonicalTokens": 135,
+          "wireTokens": 687,
+          "wireBasisTokens": 673,
+          "refCount": 6
+        },
+        {
+          "name": "API-create-a-comment",
+          "schemaHash": "b2a50d6100793bbcaac3b3cba721b440975db0286941cc3e45f8c40a3135169d",
+          "promptHash": "3a1f98b445bcc461a5316ea14420880404a102065713b856ca5a782a9d16e83a",
+          "canonicalTokens": 174,
+          "wireTokens": 725,
+          "wireBasisTokens": 711,
+          "refCount": 6
+        },
+        {
+          "name": "API-query-data-source",
+          "schemaHash": "b0701fccd77ae13b0471e2085887e8f5d3f56af11f2c87ac108e689edbd5bcf5",
+          "promptHash": "f580b96ef4abfe7b36846f518f6077591cf535450ac2fb634dceaab0b01d8731",
+          "canonicalTokens": 249,
+          "wireTokens": 770,
+          "wireBasisTokens": 756,
+          "refCount": 7
+        },
+        {
+          "name": "API-retrieve-a-data-source",
+          "schemaHash": "f27169861ec9af3fffd58bbc5459ddc484819d3703dd87ba64888870b97949af",
+          "promptHash": "d01083985c2c8496c17e5364d06a3929912b24a55fb4a126d7546e4de2fc9fbd",
+          "canonicalTokens": 65,
+          "wireTokens": 618,
+          "wireBasisTokens": 603,
+          "refCount": 6
+        },
+        {
+          "name": "API-update-a-data-source",
+          "schemaHash": "a6711ebc35cd4926c5d9e622f51368ca7614e2d68e9c95c4fba924fcbb0bef12",
+          "promptHash": "4bf933a288ddf69230b8565121871e2c781d172051b0ce89a8500f45e1fe4f2e",
+          "canonicalTokens": 275,
+          "wireTokens": 721,
+          "wireBasisTokens": 706,
+          "refCount": 8
+        },
+        {
+          "name": "API-create-a-data-source",
+          "schemaHash": "9b94002b92e84bb7974651971bd99fa775950d1ee5053a93659bf438e63d42b1",
+          "promptHash": "1d79fad10122563ed11813a2a1e9474998632df2107d73044180a835a7fa23c9",
+          "canonicalTokens": 207,
+          "wireTokens": 688,
+          "wireBasisTokens": 673,
+          "refCount": 8
+        },
+        {
+          "name": "API-list-data-source-templates",
+          "schemaHash": "59cb9168b06ebf96656bcec88494705db48fca12232abd7107b07cd470711c40",
+          "promptHash": "5065e9b8e2e24657504c0d6d603fe5cd6ce11965115d089272489e7a4fcd355a",
+          "canonicalTokens": 87,
+          "wireTokens": 640,
+          "wireBasisTokens": 625,
+          "refCount": 6
+        },
+        {
+          "name": "API-retrieve-a-database",
+          "schemaHash": "3bc0a2a66ff8ca05d655dec74a179f73886d8b2762e811bf8c5a47a8f1560209",
+          "promptHash": "537fc5ee783b5b1c0a0061faa1508128799082ad882f6ddb4b49fc3fb734eefc",
+          "canonicalTokens": 61,
+          "wireTokens": 613,
+          "wireBasisTokens": 599,
+          "refCount": 6
+        },
+        {
+          "name": "API-move-page",
+          "schemaHash": "16d01f6d15cbd73f52d977c58e0247d6ed1fbf9a98a58e379df6e9bd305538f4",
+          "promptHash": "f892d24b7fd7ca495dbb6b28674b5f6cba6d2add3a8415a9548c1c0e1f21f5fe",
+          "canonicalTokens": 185,
+          "wireTokens": 641,
+          "wireBasisTokens": 628,
+          "refCount": 7
+        },
+        {
+          "name": "API-retrieve-page-markdown",
+          "schemaHash": "07be4895f468e808b51819dec249683acf2ff01ebed69c9e0f4b76bd5b94368b",
+          "promptHash": "daf7595d39bf80bed3768df8a79e8e0cf86561321c2a27548b30dc06895dfe19",
+          "canonicalTokens": 153,
+          "wireTokens": 706,
+          "wireBasisTokens": 692,
+          "refCount": 6
+        },
+        {
+          "name": "API-update-page-markdown",
+          "schemaHash": "cf3b42cfb3e5bbd6d35c7746de5994bd25155f40bcf579d498f3983bffc19690",
+          "promptHash": "374d5a515f1a4747bbaf43b8d45ec6836b89537d83c05db46527a2a743fff9ff",
+          "canonicalTokens": 729,
+          "wireTokens": 1282,
+          "wireBasisTokens": 1268,
+          "refCount": 6
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 4882,
+      "wireTokens": 17498,
+      "wireBasisTokens": 17161,
+      "frameTokens": 2,
+      "contextBudget": 17500,
+      "refCount": 152,
+      "schemaReuseRatio": 3.5151577222449815,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "mcp-server-linear",
+      "package": "mcp-server-linear",
+      "bucket": "list-open",
+      "capturedAt": "2026-11-13T13:59:55.006Z",
+      "note": "Same caveat as notion-mcp-server (Phase 0 spike 3) — capturable without credentials, not usable without an account.",
+      "observedVersion": "1.6.0",
+      "tools": [
+        {
+          "name": "linear_auth_callback",
+          "schemaHash": "1d8045c7f1d5128796edfe82828d7b82b6031bc767d88a5aaa3eb795ad12dee0",
+          "promptHash": "5989407c6ae02c5d79199a9f6f546ecc291dfd3688233fd1fef931879f831bc2",
+          "canonicalTokens": 41,
+          "wireTokens": 40,
+          "wireBasisTokens": 40,
+          "refCount": 0
+        },
+        {
+          "name": "linear_create_issue",
+          "schemaHash": "aed7ef5cb1ee346bcd94aff70e168a3b750726d3d5b1231b012a0745b8c79ddf",
+          "promptHash": "f8c8ffec2ad752c6da0efc47c0f78c7f7731c73762048f78d84e500e3876f531",
+          "canonicalTokens": 243,
+          "wireTokens": 237,
+          "wireBasisTokens": 237,
+          "refCount": 0
+        },
+        {
+          "name": "linear_create_project_with_issues",
+          "schemaHash": "52afe441c04d26067540d325aa1728255160198551dc2c152f3564fdcb2a064a",
+          "promptHash": "89404634e885670f4a0f5d7bc5044306d2552f9906f22c1853c6947b594a7009",
+          "canonicalTokens": 226,
+          "wireTokens": 372,
+          "wireBasisTokens": 223,
+          "refCount": 0
+        },
+        {
+          "name": "linear_bulk_update_issues",
+          "schemaHash": "cc010c475f2ab703dd232ba97756bcd7a8725d9a593dba1bdb8cef7de44d40fd",
+          "promptHash": "91dcbc900ae9700add3a53384cb5fe8a35fce8f9a7eacf98b644cfe8b8054c75",
+          "canonicalTokens": 138,
+          "wireTokens": 135,
+          "wireBasisTokens": 135,
+          "refCount": 0
+        },
+        {
+          "name": "linear_edit_issue",
+          "schemaHash": "39409a06cd0e4e2dbeff9fc2073321b0eb6013dcc798455c1657d9b790fdeac1",
+          "promptHash": "afe90751f17ba55ea0cfdadadd4d6c57790d15253f3b3267c20b9a55934962dd",
+          "canonicalTokens": 381,
+          "wireTokens": 369,
+          "wireBasisTokens": 369,
+          "refCount": 0
+        },
+        {
+          "name": "linear_search_issues",
+          "schemaHash": "119c3d4d64e65ee691fd6c4e10de8f154161dec18b67b4879b9f2c03040d9e2d",
+          "promptHash": "8e8ae08a4d9b9c645dba0a1f49b89929b5554553ff5e9fdbc1b1ac4bfb0a18e2",
+          "canonicalTokens": 213,
+          "wireTokens": 205,
+          "wireBasisTokens": 205,
+          "refCount": 0
+        },
+        {
+          "name": "linear_search_issues_by_identifier",
+          "schemaHash": "2c0e07ce50720c7966556ed0935dec4916b3985b59f39c87efd7b2a870eebc22",
+          "promptHash": "2786a0d6aa5bf3d2d546262bd8e1f4819f161425b7aa3dffe56417bc073f2dc0",
+          "canonicalTokens": 76,
+          "wireTokens": 75,
+          "wireBasisTokens": 75,
+          "refCount": 0
+        },
+        {
+          "name": "linear_get_issue",
+          "schemaHash": "3e6de00193e1eca23700246f80377ce102bdc826196cca655e1bc5eb0edcf543",
+          "promptHash": "198158a75077b50a0a08713f7a80332748cd473b2d2a1801953ef383c5e4fc90",
+          "canonicalTokens": 56,
+          "wireTokens": 55,
+          "wireBasisTokens": 55,
+          "refCount": 0
+        },
+        {
+          "name": "linear_get_teams",
+          "schemaHash": "5163b90dadf6048e2cab69bc0ede11542e5d9dfed87adc9b8f1a07584c444147",
+          "promptHash": "69514801045f410334d7ebb714b0da8c106056a31a48d172d2bfd9f75f739a7b",
+          "canonicalTokens": 31,
+          "wireTokens": 31,
+          "wireBasisTokens": 31,
+          "refCount": 0
+        },
+        {
+          "name": "linear_get_user",
+          "schemaHash": "5163b90dadf6048e2cab69bc0ede11542e5d9dfed87adc9b8f1a07584c444147",
+          "promptHash": "a1d316362b26606417fc9879e03908dc2f41eb24d32c8f8d51f313d9b79cd30a",
+          "canonicalTokens": 26,
+          "wireTokens": 26,
+          "wireBasisTokens": 26,
+          "refCount": 0
+        },
+        {
+          "name": "linear_delete_issue",
+          "schemaHash": "c0c39f1657a8279bd6da73a9e19b147460100bc054434328bdb1ab00580db341",
+          "promptHash": "40b06f5a739d64a91ef390961774c5e60814ff124e04f7a8f592f559168c213d",
+          "canonicalTokens": 50,
+          "wireTokens": 49,
+          "wireBasisTokens": 49,
+          "refCount": 0
+        },
+        {
+          "name": "linear_get_project",
+          "schemaHash": "c0c39f1657a8279bd6da73a9e19b147460100bc054434328bdb1ab00580db341",
+          "promptHash": "2a1dee919e4184d9db0e26d9460054a4e27fd6cafd35b71d1fb3498862a1127c",
+          "canonicalTokens": 40,
+          "wireTokens": 39,
+          "wireBasisTokens": 39,
+          "refCount": 0
+        },
+        {
+          "name": "linear_list_projects",
+          "schemaHash": "7f5a1f327880216cb52e7996f1fbaf95d8089b267f2b5138ac36950f69b9c9f1",
+          "promptHash": "7a381cad3cd800fe7d4930f493b6a66fca95496a6bef53dae2ba44a4ad3df4fb",
+          "canonicalTokens": 196,
+          "wireTokens": 195,
+          "wireBasisTokens": 195,
+          "refCount": 0
+        },
+        {
+          "name": "linear_create_issues",
+          "schemaHash": "83fbf0a5a43c4cf8eb81e297c84e30e2638c57920b1204de3605ab9bbcdf2cf9",
+          "promptHash": "4f0243885ea1d094a0f2fdfefeb80ac1d7995c5ed82cc2425cab61ca5bbca924",
+          "canonicalTokens": 289,
+          "wireTokens": 281,
+          "wireBasisTokens": 281,
+          "refCount": 0
+        },
+        {
+          "name": "linear_create_comment",
+          "schemaHash": "26de3f5c37ea305459ed25d9e42e33709208886550ed34599441cdb579fc521a",
+          "promptHash": "623a0f20ed238d52a0596fd6d9f638fd97af81b12436d653cbb02f2ea06692cb",
+          "canonicalTokens": 66,
+          "wireTokens": 65,
+          "wireBasisTokens": 65,
+          "refCount": 0
+        },
+        {
+          "name": "linear_update_comment",
+          "schemaHash": "0f3ff4a77c22a29582f85ece6e12e87c8420312ffeea46eb98c683e7bcef9bd4",
+          "promptHash": "1eefec03565657d045504b26234b5d65cddc1511bf3a2a6e029f206f64acc291",
+          "canonicalTokens": 70,
+          "wireTokens": 69,
+          "wireBasisTokens": 69,
+          "refCount": 0
+        },
+        {
+          "name": "linear_delete_comment",
+          "schemaHash": "c0c39f1657a8279bd6da73a9e19b147460100bc054434328bdb1ab00580db341",
+          "promptHash": "6cc7327649e46f7dadd963620ce4baa1240963f4e8a5079bb2ca20e41ea02760",
+          "canonicalTokens": 42,
+          "wireTokens": 41,
+          "wireBasisTokens": 41,
+          "refCount": 0
+        },
+        {
+          "name": "linear_resolve_comment",
+          "schemaHash": "7b26028d91dba1ab48a0494a5cc2e27157d11982fa0f671e584217dd4aba1ccb",
+          "promptHash": "3610a14af8e5f2625e2eac9c2410c7eeac2550038958b41f97053b1928e57b82",
+          "canonicalTokens": 68,
+          "wireTokens": 67,
+          "wireBasisTokens": 67,
+          "refCount": 0
+        },
+        {
+          "name": "linear_unresolve_comment",
+          "schemaHash": "c0c39f1657a8279bd6da73a9e19b147460100bc054434328bdb1ab00580db341",
+          "promptHash": "6f36b30212603ac6c861bbe4e35ce695e197c0dcbb32afab528010301544ae4d",
+          "canonicalTokens": 46,
+          "wireTokens": 45,
+          "wireBasisTokens": 45,
+          "refCount": 0
+        },
+        {
+          "name": "linear_create_customer_need_from_attachment",
+          "schemaHash": "6012a05560c32f55553d3f99a529f51abcd94c041b6576ebf216633298580d06",
+          "promptHash": "2008b7ef349cfcef2fab58d02ec779b8caf9c5a7f09328e1e5b14fd28c42af58",
+          "canonicalTokens": 111,
+          "wireTokens": 108,
+          "wireBasisTokens": 108,
+          "refCount": 0
+        },
+        {
+          "name": "linear_get_project_milestones",
+          "schemaHash": "9c3fd64081d06286cadbe77d4bd5df7332290ec671104e5812798dc32702e957",
+          "promptHash": "292794317b470dc2d561330d3cca59f8da41dee6b0de5a12184e7ca24bc4ca72",
+          "canonicalTokens": 299,
+          "wireTokens": 292,
+          "wireBasisTokens": 292,
+          "refCount": 0
+        },
+        {
+          "name": "linear_create_project_milestone",
+          "schemaHash": "95d48d19c11ec150a6f345bf14dd659b4d382c7acc8ba3d02f66b4a81acf7f19",
+          "promptHash": "8628590f5cd6de1a7f098d45be5ad2fc1969f5db3e63cc447d41aa44f29404af",
+          "canonicalTokens": 125,
+          "wireTokens": 122,
+          "wireBasisTokens": 122,
+          "refCount": 0
+        },
+        {
+          "name": "linear_update_project_milestone",
+          "schemaHash": "ff4b3292f8e46f0312268275b6a31d6bab7b03b270a18cf1580b6f6149fd0f02",
+          "promptHash": "ce87c1e79c0aa68a53836041431731bee3050c7a376a0c29ff20df7dc1b55716",
+          "canonicalTokens": 122,
+          "wireTokens": 118,
+          "wireBasisTokens": 118,
+          "refCount": 0
+        },
+        {
+          "name": "linear_delete_project_milestone",
+          "schemaHash": "c0c39f1657a8279bd6da73a9e19b147460100bc054434328bdb1ab00580db341",
+          "promptHash": "4a518a8d83f9105efe4605786f950f17ec73e3d7cb84f32f7da3e397bebfe070",
+          "canonicalTokens": 47,
+          "wireTokens": 46,
+          "wireBasisTokens": 46,
+          "refCount": 0
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 3002,
+      "wireTokens": 3082,
+      "wireBasisTokens": 2933,
+      "frameTokens": 0,
+      "contextBudget": 3082,
+      "refCount": 0,
+      "schemaReuseRatio": 0.9770153231179214,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "sentry-mcp-server",
+      "package": "@sentry/mcp-server",
+      "bucket": "list-env-gated",
+      "capturedAt": "2026-11-13T13:59:59.108Z",
+      "caveat": "Promoted via a placeholder env var (not a real credential — DECISIONS.md #11's zero-secrets guarantee holds). The real tool list may vary by credential scope from what the placeholder probe saw (DECISIONS.md #12).",
+      "observedVersion": "0.49.0",
+      "tools": [
+        {
+          "name": "whoami",
+          "schemaHash": "9a16696ff2c679827d96978c20c5387d00cec78329c1afb94c603aa86477fca0",
+          "promptHash": "1ef707417c127c86c51e7b59d0b265ad9f15d1e88c468e4585bb604a2df1cd70",
+          "canonicalTokens": 77,
+          "wireTokens": 287,
+          "wireBasisTokens": 76,
+          "refCount": 0
+        },
+        {
+          "name": "find_organizations",
+          "schemaHash": "7d279e5e7d9d71da96bc40219af0e4d1d3ea90172968d1694d92590eeefa2fd4",
+          "promptHash": "30c2afeaaa8f4086c08a0c95fafb9a54ce629941383f8125b7087ce4acc2cece",
+          "canonicalTokens": 225,
+          "wireTokens": 394,
+          "wireBasisTokens": 227,
+          "refCount": 0
+        },
+        {
+          "name": "find_teams",
+          "schemaHash": "ad712709155d76e875b0f15962b5a26d06692e6242cf5d40facb8018e365300e",
+          "promptHash": "7b761a5089f83287f4284595af9ff96b8c20638d83cff9678f725c1dc9419975",
+          "canonicalTokens": 362,
+          "wireTokens": 493,
+          "wireBasisTokens": 366,
+          "refCount": 0
+        },
+        {
+          "name": "find_projects",
+          "schemaHash": "ad712709155d76e875b0f15962b5a26d06692e6242cf5d40facb8018e365300e",
+          "promptHash": "713581a3f4f0f8ce2144521ad5d0e05792e1c7e6de441095ccef0833702af882",
+          "canonicalTokens": 358,
+          "wireTokens": 480,
+          "wireBasisTokens": 362,
+          "refCount": 0
+        },
+        {
+          "name": "find_releases",
+          "schemaHash": "435923288591fe762c8cee9443db062303de21449003023d5ee97b20eb2d8a70",
+          "promptHash": "3fa9222ea85763ad7093734eb4c36c832af431b06e3e6e5c9571bbd2a2adcb52",
+          "canonicalTokens": 488,
+          "wireTokens": 2077,
+          "wireBasisTokens": 492,
+          "refCount": 0
+        },
+        {
+          "name": "get_release_details",
+          "schemaHash": "1bdba00abd5399cfdf1af85125e608a19389bd07009733705e864554dba87572",
+          "promptHash": "02455632af97c1e1faacb48f8599f0c31242e16af9d0640723e55a55e9b78969",
+          "canonicalTokens": 569,
+          "wireTokens": 1286,
+          "wireBasisTokens": 572,
+          "refCount": 0
+        },
+        {
+          "name": "find_dashboards",
+          "schemaHash": "c570e5d8647cdaf16cc01aae0e1b1391fd104ac3410000e5436173eabde545f9",
+          "promptHash": "01aa6de7ea41b40a74e55acd3ba1d6baaf6fe764645df29f6132a905f99a17f8",
+          "canonicalTokens": 438,
+          "wireTokens": 711,
+          "wireBasisTokens": 442,
+          "refCount": 0
+        },
+        {
+          "name": "get_dashboard_details",
+          "schemaHash": "dbc3c0d437ca4113d29c511fa640a3e0d677fced9a0265822bab9a02a0ce1d89",
+          "promptHash": "0b4e36af96452739402cbce6b1b62f8a503dfc1d48d18540f2c7a173e23e1739",
+          "canonicalTokens": 385,
+          "wireTokens": 1056,
+          "wireBasisTokens": 385,
+          "refCount": 0
+        },
+        {
+          "name": "find_monitors",
+          "schemaHash": "028560b67bf0edf38da3c3a9142fd6003719ca93217285d69aa5903c35aeb0aa",
+          "promptHash": "1d078cef4f7fe0f4cc240b3bf22899571496864b46a65d68ad075c72bd76e03c",
+          "canonicalTokens": 522,
+          "wireTokens": 1440,
+          "wireBasisTokens": 530,
+          "refCount": 0
+        },
+        {
+          "name": "get_monitor_details",
+          "schemaHash": "9a082f48c87dda8787f43d57956638d2787cdf4f93ddff40c22932e59c430930",
+          "promptHash": "ade243fb4263a7d2067cdc1bbc3b92ae5443836a9e053344c2c3c09e04af1f00",
+          "canonicalTokens": 1051,
+          "wireTokens": 1708,
+          "wireBasisTokens": 1061,
+          "refCount": 0
+        },
+        {
+          "name": "create_monitor",
+          "schemaHash": "565e2fb006fe321cd623bb0c1772c16beb7ee630001a3355aa1c2269a655bb17",
+          "promptHash": "2eb828c4a169088af049eb26667176879a51fe0b813ba3249ea15bb237ebc7f2",
+          "canonicalTokens": 1043,
+          "wireTokens": 1434,
+          "wireBasisTokens": 1045,
+          "refCount": 0
+        },
+        {
+          "name": "delete_monitor_environment",
+          "schemaHash": "5b4fc60f22d7b2af9fd36408d0fbfed21787efedb7481a2b283cb65a1660f908",
+          "promptHash": "d8b3be9416ce9c5be1ee20afa6b82f409f7e9e292575eaab1aa1e521597bfba5",
+          "canonicalTokens": 358,
+          "wireTokens": 470,
+          "wireBasisTokens": 359,
+          "refCount": 0
+        },
+        {
+          "name": "find_uptime_monitors",
+          "schemaHash": "ec83759e791c6ca6320b1df033227a0009d60ce688f3fe06539d7b404e647c6a",
+          "promptHash": "7b0fee4c40d0fac09eb9cb36ccb41ecb1d3119c067c509e9ed28b83ab48a6fc5",
+          "canonicalTokens": 476,
+          "wireTokens": 691,
+          "wireBasisTokens": 476,
+          "refCount": 0
+        },
+        {
+          "name": "get_uptime_monitor_details",
+          "schemaHash": "a1eae63c221198b06435b75f3dfd4220d93a6e971280432e5dd3b97b6dbb1afa",
+          "promptHash": "df6b506bfce36c018bf9c637e72f178e654979016c078c265a1b605b7319efc5",
+          "canonicalTokens": 926,
+          "wireTokens": 1386,
+          "wireBasisTokens": 927,
+          "refCount": 0
+        },
+        {
+          "name": "find_metric_monitors",
+          "schemaHash": "74b75730173e94b62e3c636b80ab678c064e37d89f03c13e0f502be34f0f566c",
+          "promptHash": "cbda93f759fddded4b46a78530cb35f42804d873f6b575ced360307ef297e5b3",
+          "canonicalTokens": 431,
+          "wireTokens": 610,
+          "wireBasisTokens": 429,
+          "refCount": 0
+        },
+        {
+          "name": "get_metric_monitor_details",
+          "schemaHash": "ccdd098bef85559224d0f80590365228929300894b8d87fe8f23acb110ed892a",
+          "promptHash": "75d3782e8f3a0a36aee3ebd8de4e126993b46104ae97a1997a24d456973b66b3",
+          "canonicalTokens": 379,
+          "wireTokens": 912,
+          "wireBasisTokens": 379,
+          "refCount": 0
+        },
+        {
+          "name": "create_metric_monitor",
+          "schemaHash": "7e425b24c8803f6fbaac4070b9b255604fb2e9f0c0d3844e7db089b58447f76d",
+          "promptHash": "df2939a40bea31ce3dc2bb081dc8b6308c23057516ff6f48b5b4ad899db54c6e",
+          "canonicalTokens": 1231,
+          "wireTokens": 1772,
+          "wireBasisTokens": 1226,
+          "refCount": 0
+        },
+        {
+          "name": "update_metric_monitor",
+          "schemaHash": "716edb57d23c8469e659f51529e4c5c40ae0acaa68642f006e6d1340a18abbff",
+          "promptHash": "8fe4782386cf6be02ffbb80d10d130db702d91e387e7dedfcd1968e0e6ed9727",
+          "canonicalTokens": 1182,
+          "wireTokens": 1712,
+          "wireBasisTokens": 1173,
+          "refCount": 0
+        },
+        {
+          "name": "delete_metric_monitor",
+          "schemaHash": "9d6b493b5107b421ebdd874800f79bfa5e5a78db69c2d4683d0c283712f50075",
+          "promptHash": "438f0fa22e69f47e70eb5b5c49221a7f1604db0d6989b9dc76182a22961c5852",
+          "canonicalTokens": 348,
+          "wireTokens": 439,
+          "wireBasisTokens": 349,
+          "refCount": 0
+        },
+        {
+          "name": "create_uptime_monitor",
+          "schemaHash": "29822c5d9d1a445da6839a20960dc372f3873d52dd6d617e6d77ac25ae9ad5c5",
+          "promptHash": "31bfddb7b3ccce7759f7bbfb840783190895768069308eca198cc0cce51fb801",
+          "canonicalTokens": 869,
+          "wireTokens": 1111,
+          "wireBasisTokens": 870,
+          "refCount": 0
+        },
+        {
+          "name": "update_uptime_monitor",
+          "schemaHash": "5e9e98b7f2fb20d9ff18f0b303e03d7b43a426527df156a833105a19439043ca",
+          "promptHash": "21f26d6126ad000d4e754b17ab8e712a4f454bee0187294aa8eb0b2703544282",
+          "canonicalTokens": 891,
+          "wireTokens": 1138,
+          "wireBasisTokens": 890,
+          "refCount": 0
+        },
+        {
+          "name": "delete_uptime_monitor",
+          "schemaHash": "93ca5620291ac298c0d7c93656ba05d5e5a397d274e24af3e1251314d6e25c2d",
+          "promptHash": "f15f074e9fad83533ed0a12066717c51f3e278fb9bda6ef373a2cacae558dd3a",
+          "canonicalTokens": 317,
+          "wireTokens": 424,
+          "wireBasisTokens": 318,
+          "refCount": 0
+        },
+        {
+          "name": "find_alert_rules",
+          "schemaHash": "34ac1eb66e679fb52f649b1946f968dc68aa622f86c3071861718878045df860",
+          "promptHash": "a7cfb7b80064a7810aebf0f96eb7817297e6f42648e2e1e69d2278ae8c2323b5",
+          "canonicalTokens": 621,
+          "wireTokens": 1169,
+          "wireBasisTokens": 627,
+          "refCount": 0
+        },
+        {
+          "name": "get_alert_rule",
+          "schemaHash": "581e4cb3bc4e29bbcd6ee1bb00ddb99d6a042d6283e2875dd9e07c094ce37285",
+          "promptHash": "3799b61d6da9cab26d320ed5242d0dbc5c330ef35a6b99a55755fae046f06eba",
+          "canonicalTokens": 608,
+          "wireTokens": 2607,
+          "wireBasisTokens": 611,
+          "refCount": 0
+        },
+        {
+          "name": "get_alert_options",
+          "schemaHash": "ce60c283acd3026b95832ef913234cdc43bcc146a8ec8e607abf7b80b2b4cf22",
+          "promptHash": "aeb5565566a0202d615f55a602cc3323fdb22b9fbb6f623479eed70f072b4e9d",
+          "canonicalTokens": 778,
+          "wireTokens": 1458,
+          "wireBasisTokens": 779,
+          "refCount": 0
+        },
+        {
+          "name": "update_alert_rule",
+          "schemaHash": "74cfd5d20720b8a7c8909c5ecb177266f06825f12aaeb5a54ec36099113a8206",
+          "promptHash": "25ff36066483707e1c5a3a69d4ba55f936f15467861deed3d28e10819baf2a76",
+          "canonicalTokens": 1378,
+          "wireTokens": 2001,
+          "wireBasisTokens": 1371,
+          "refCount": 0
+        },
+        {
+          "name": "create_alert_rule",
+          "schemaHash": "9c15ab8b4e9a049e634869c71a07c8ce1c79b261eed8b6c930d29ac36af16e9e",
+          "promptHash": "bb865a7b0b683c6414553af4bfa2c231d2f6cd5e5cd13632e0e7fa73d8a57579",
+          "canonicalTokens": 1025,
+          "wireTokens": 1655,
+          "wireBasisTokens": 1018,
+          "refCount": 0
+        },
+        {
+          "name": "delete_alert_rule",
+          "schemaHash": "bc405005b6a09699df9d89accf4eeae51dd74b5823775fe8049aed5234a638b1",
+          "promptHash": "9edd976961e3a34259c99f4f30eb3f1ac9602532e1c4c780036dab0b12e0efe5",
+          "canonicalTokens": 385,
+          "wireTokens": 477,
+          "wireBasisTokens": 387,
+          "refCount": 0
+        },
+        {
+          "name": "get_issue_details",
+          "schemaHash": "06d41ed4449b3f98bd3ebdee8a402e7468ea1b04248ff7806d6cae33d1fe30fa",
+          "promptHash": "96de12be43f6231841917db0fffca0103787809b0ca72b3227e117fe214dee32",
+          "canonicalTokens": 808,
+          "wireTokens": 833,
+          "wireBasisTokens": 807,
+          "refCount": 0
+        },
+        {
+          "name": "get_event_stacktrace",
+          "schemaHash": "ebd8c3baa7b818a51bc8f57e93a605e089db58ba1866c68f5a19ca6b3ecd5931",
+          "promptHash": "83a12c76065f189a6468abf8b0271b60d82e0da80d8b3ef6cf803c2df57d0709",
+          "canonicalTokens": 653,
+          "wireTokens": 680,
+          "wireBasisTokens": 653,
+          "refCount": 0
+        },
+        {
+          "name": "get_issue_activity",
+          "schemaHash": "7edce3abadf586198beedd76fd44c18ac67bf675c92fe55e970f576f1d82551d",
+          "promptHash": "0d2b335e2d0a65b17f94a808c967c789f9defa42e9b5ddfc35d981f576bf3f82",
+          "canonicalTokens": 397,
+          "wireTokens": 1971,
+          "wireBasisTokens": 396,
+          "refCount": 0
+        },
+        {
+          "name": "get_issue_breadcrumbs",
+          "schemaHash": "ef6928003f6dd13c0632aed75da8f7a459d1dee51021ce15f6dfd5824c497e71",
+          "promptHash": "e30cbed86b02e82e030813a0585b44a0539adf711939fef8e1ffafaab81a976e",
+          "canonicalTokens": 521,
+          "wireTokens": 736,
+          "wireBasisTokens": 521,
+          "refCount": 0
+        },
+        {
+          "name": "get_issue_user_reports",
+          "schemaHash": "b409f71ba036eb3a2127f5b3760f91e64eec4dd573ccb102263d1b751a43bf85",
+          "promptHash": "ca8546c96580c7c67a1c1564c7a68bcfc3ff22a5f6ebd837336aeb777c7addee",
+          "canonicalTokens": 481,
+          "wireTokens": 840,
+          "wireBasisTokens": 483,
+          "refCount": 0
+        },
+        {
+          "name": "get_issue_tag_values",
+          "schemaHash": "e83e8716821b270422632b1271fc0a153e04a22af7b1411c538990d3f0e67d18",
+          "promptHash": "dfd068d7a6cd4aebb8d6b8966a25fcbdb6b3f9ea9761be05c6452c14fdc8fc88",
+          "canonicalTokens": 608,
+          "wireTokens": 792,
+          "wireBasisTokens": 609,
+          "refCount": 0
+        },
+        {
+          "name": "get_trace_details",
+          "schemaHash": "7b466444b59ce28c8733605f6b85ddc73998b583917bcbde82f1e0501691de88",
+          "promptHash": "ac16630f5ff352b372a8c0e798c9fe9761e010eba12224eb698e0e52f9d939ab",
+          "canonicalTokens": 704,
+          "wireTokens": 731,
+          "wireBasisTokens": 705,
+          "refCount": 0
+        },
+        {
+          "name": "get_span_details",
+          "schemaHash": "1d018604d673ae7629f61ac0e7bac3dc71fed66d9d81894b216b6f831839175e",
+          "promptHash": "2f831ea3077267760cd57f6150ef2acceff096ae1cc3c49a86e05f8f871da7ec",
+          "canonicalTokens": 465,
+          "wireTokens": 492,
+          "wireBasisTokens": 466,
+          "refCount": 0
+        },
+        {
+          "name": "get_replay_details",
+          "schemaHash": "e9ab8c2e418e3eaf85a77094f13fd3879101b33d25fdc45a5b7397e844ee81ed",
+          "promptHash": "8ef01495050441e5b83c0ec2c5d7130778c2ddf005e39db34ff7f343a1c495e8",
+          "canonicalTokens": 845,
+          "wireTokens": 2015,
+          "wireBasisTokens": 844,
+          "refCount": 0
+        },
+        {
+          "name": "get_event_attachment",
+          "schemaHash": "1cb2c28962826c1eac5ed8da66b5521d4136f183419a4dcf0d5f68c9e595239b",
+          "promptHash": "94dd4afa62a103f449fcab08ddf3c0f33466eaae45ff1ffcd9a8ccca7c060965",
+          "canonicalTokens": 561,
+          "wireTokens": 589,
+          "wireBasisTokens": 563,
+          "refCount": 0
+        },
+        {
+          "name": "update_issue",
+          "schemaHash": "68543c460a64569e0c51c8c99d8f84c7f51f6f5f6d904977f0f40d72d606be81",
+          "promptHash": "aab509f06d9d74f17f4ecb4e13b0657cae350a49b868a12b76794c4259cda026",
+          "canonicalTokens": 1258,
+          "wireTokens": 1718,
+          "wireBasisTokens": 1260,
+          "refCount": 0
+        },
+        {
+          "name": "link_issue",
+          "schemaHash": "16fd3bfda17c93ebd2dff736a7cb7393ac624ab4f5a198461982847f4343114e",
+          "promptHash": "9a254b58b344e95b7a6d70bf0fa619cedb585b8d976db02d08beef5cb5ca8cc1",
+          "canonicalTokens": 608,
+          "wireTokens": 772,
+          "wireBasisTokens": 607,
+          "refCount": 0
+        },
+        {
+          "name": "unlink_issue",
+          "schemaHash": "c515808010f0a8472cdd6b8288ed1db7f8bf3be13669a6c6a8e5d9c7fcc6a21e",
+          "promptHash": "0ebabcadddb591ac658e775cfc8df0cce2aa3185aed81d5186c015e5f47d5fc1",
+          "canonicalTokens": 471,
+          "wireTokens": 637,
+          "wireBasisTokens": 471,
+          "refCount": 0
+        },
+        {
+          "name": "search_errors",
+          "schemaHash": "0210afe677182fe19f85abaa79620f02b6b56229f511c5724dbb16d9eb26f198",
+          "promptHash": "cca2b1b80e4906874109a93edb578b3aff725db8b1341c35405d20f5ed88a25a",
+          "canonicalTokens": 721,
+          "wireTokens": 1526,
+          "wireBasisTokens": 722,
+          "refCount": 0
+        },
+        {
+          "name": "search_logs",
+          "schemaHash": "0210afe677182fe19f85abaa79620f02b6b56229f511c5724dbb16d9eb26f198",
+          "promptHash": "258fd7d3550d67e2fcaeeca05b8743c93cac73e152e3af4461cae92a0fa1c351",
+          "canonicalTokens": 745,
+          "wireTokens": 1563,
+          "wireBasisTokens": 746,
+          "refCount": 0
+        },
+        {
+          "name": "search_traces",
+          "schemaHash": "0210afe677182fe19f85abaa79620f02b6b56229f511c5724dbb16d9eb26f198",
+          "promptHash": "98a6f75066a4c51affbd8cb0436fe71c3a44d7309b661ebbe44f7a0ba723586d",
+          "canonicalTokens": 783,
+          "wireTokens": 1589,
+          "wireBasisTokens": 784,
+          "refCount": 0
+        },
+        {
+          "name": "search_metrics",
+          "schemaHash": "0210afe677182fe19f85abaa79620f02b6b56229f511c5724dbb16d9eb26f198",
+          "promptHash": "576337e63c60c797aed0dd98a9b5aadecfcee8df425a4809a26228cbfad8da29",
+          "canonicalTokens": 685,
+          "wireTokens": 1490,
+          "wireBasisTokens": 686,
+          "refCount": 0
+        },
+        {
+          "name": "search_profiles",
+          "schemaHash": "0210afe677182fe19f85abaa79620f02b6b56229f511c5724dbb16d9eb26f198",
+          "promptHash": "e136bd731c3b1249808cbf87179071ea83439746083323a81ebb3e52b213543b",
+          "canonicalTokens": 625,
+          "wireTokens": 1443,
+          "wireBasisTokens": 626,
+          "refCount": 0
+        },
+        {
+          "name": "search_replays",
+          "schemaHash": "b275bcefed41c35328ca82f3e49591fc2610e4ee1697b6166cfc524b32b83a9a",
+          "promptHash": "e4af1ff4406096aba02dc85337fc5153fb2023de26362e76b298bdd0523660a5",
+          "canonicalTokens": 649,
+          "wireTokens": 1346,
+          "wireBasisTokens": 649,
+          "refCount": 0
+        },
+        {
+          "name": "create_team",
+          "schemaHash": "bf26ea79c3baa7e17123cf6cd30a9ac71448a23204806cccdda0f6832c7c91d9",
+          "promptHash": "ab523ec4c98bee43205bedb81fce0d8121a684bb20487a656ffdf424ec1e0fe9",
+          "canonicalTokens": 319,
+          "wireTokens": 425,
+          "wireBasisTokens": 320,
+          "refCount": 0
+        },
+        {
+          "name": "create_project",
+          "schemaHash": "8bb589f4f2d1370b925eb09180cb9fca0eed24da6b30a10849982ba210639248",
+          "promptHash": "d5a82e4b5ed63afee6567046afff3a2d608d8f2792ab9c2196a07b3ea001dc8e",
+          "canonicalTokens": 701,
+          "wireTokens": 891,
+          "wireBasisTokens": 707,
+          "refCount": 0
+        },
+        {
+          "name": "update_project",
+          "schemaHash": "efcafb34753de198a232c1490f927f8ce9d4e05c2340d20d1e42aef1bb4506d6",
+          "promptHash": "c596c4c5c841219e7a16f23c487aaf582738f819be56e04278e3588296bc3db1",
+          "canonicalTokens": 594,
+          "wireTokens": 723,
+          "wireBasisTokens": 599,
+          "refCount": 0
+        },
+        {
+          "name": "add_team_to_project",
+          "schemaHash": "25554ebead9f73636a5cb373a44c378513e3c940735f0ed40138c7a21a914c73",
+          "promptHash": "d127c9fbe7ee362892ad8660c7eb10440e0b7a4cef2e7cacaba7ea445439ca39",
+          "canonicalTokens": 381,
+          "wireTokens": 512,
+          "wireBasisTokens": 383,
+          "refCount": 0
+        },
+        {
+          "name": "remove_team_from_project",
+          "schemaHash": "25554ebead9f73636a5cb373a44c378513e3c940735f0ed40138c7a21a914c73",
+          "promptHash": "c8888496ccfe9a4b3915b862ab719e75718da9f086ef60f3e9b048034fc805d0",
+          "canonicalTokens": 387,
+          "wireTokens": 511,
+          "wireBasisTokens": 389,
+          "refCount": 0
+        },
+        {
+          "name": "create_dsn",
+          "schemaHash": "423a57d66b80d041f47b8e75d0aa87761ea925b06250bf5afb75efd282780852",
+          "promptHash": "3ca1e0be4f9218f322cba1a8b6f4f35dd180040610f5199cf763e69ef810660f",
+          "canonicalTokens": 419,
+          "wireTokens": 526,
+          "wireBasisTokens": 420,
+          "refCount": 0
+        },
+        {
+          "name": "find_dsns",
+          "schemaHash": "faceae69d1db606aa18fb07ddfa94e1f1525ef8954d4cdf963206416121c0bcc",
+          "promptHash": "9df2db1ef5803ac166c3b246ec7b92426930abca1e5cf1ed7db7f6cf5a420493",
+          "canonicalTokens": 372,
+          "wireTokens": 486,
+          "wireBasisTokens": 372,
+          "refCount": 0
+        },
+        {
+          "name": "update_dsn",
+          "schemaHash": "8ae073f2b2bcc0092299be7c018aa0e53b9449c66c09533e56f67ee5988a2074",
+          "promptHash": "bb34fde396aeacfe853868b905d1713441b9c8dd91e4b826c90a2209ba730152",
+          "canonicalTokens": 954,
+          "wireTokens": 1234,
+          "wireBasisTokens": 954,
+          "refCount": 0
+        },
+        {
+          "name": "analyze_issue_with_seer",
+          "schemaHash": "28492a0fdeadf168b7663b6da131a018cb74789b3dcf73fd3cdd0fc29529993b",
+          "promptHash": "7e0be9e5311a2bfd520a757d97eff3b25d83f7e1bf4f48bd8f478cf18812c6d3",
+          "canonicalTokens": 619,
+          "wireTokens": 647,
+          "wireBasisTokens": 619,
+          "refCount": 0
+        },
+        {
+          "name": "search_docs",
+          "schemaHash": "a63d8d4fcea8c599ad474806eeaea8f3b8c885fa4e21d52f32823229edbf155e",
+          "promptHash": "937d60bc4f264dc6d98fb33a03384f7a7b033df7fc26f02dc1b9c1b1faf54608",
+          "canonicalTokens": 916,
+          "wireTokens": 1186,
+          "wireBasisTokens": 914,
+          "refCount": 0
+        },
+        {
+          "name": "get_doc",
+          "schemaHash": "4b4a8be13a643b7eb99dc471a28cc1baf3da91fe3e5380c1f2b21c584eed7189",
+          "promptHash": "eed844c0b2232d8a2a40f170fe946e8bdd5b8b234eecc416b1a101a0c6b06726",
+          "canonicalTokens": 206,
+          "wireTokens": 233,
+          "wireBasisTokens": 206,
+          "refCount": 0
+        },
+        {
+          "name": "search_issues",
+          "schemaHash": "c67277e5e2e934d5cea5b2663d602a94b755e889a9c4d9a7f05447650a7bf1b9",
+          "promptHash": "9ad55a73894a0b8b21e2f984f9db7cd4cb4fe5671701b1298e0a50ceca576012",
+          "canonicalTokens": 906,
+          "wireTokens": 1469,
+          "wireBasisTokens": 904,
+          "refCount": 0
+        },
+        {
+          "name": "search_issue_events",
+          "schemaHash": "f7f3ce0b395f4bad92d253459f46f0043d39fb42aea694e708ea8b73f1657632",
+          "promptHash": "4d21b113870572beeba9bb3f3bfb28575d964ba9a3f3a62f7f9b085e89bebabb",
+          "canonicalTokens": 793,
+          "wireTokens": 1448,
+          "wireBasisTokens": 794,
+          "refCount": 0
+        },
+        {
+          "name": "find_dropped_events",
+          "schemaHash": "a0a565496bb07d93a1c49b0b0a451e7f1a0369a53f645a5d1c2b30ec15181515",
+          "promptHash": "70a236bbdf8817604bee4c5c122553813919bf877cce953f7c5b6386fbfeeaf1",
+          "canonicalTokens": 1081,
+          "wireTokens": 1378,
+          "wireBasisTokens": 1095,
+          "refCount": 0
+        },
+        {
+          "name": "get_profile",
+          "schemaHash": "19346944f49cd6dcc5faa56d7b3ce725dd9913e057918adee59282b139bf141b",
+          "promptHash": "71fcaaeee569456d3e8aeb0f00f49f84d9e0ba0db43cb2701c2b05e2e7a0fe12",
+          "canonicalTokens": 916,
+          "wireTokens": 1826,
+          "wireBasisTokens": 916,
+          "refCount": 0
+        },
+        {
+          "name": "get_profile_details",
+          "schemaHash": "9b28479bbfb94723f63f18de4428d76f5697ac73a9a38bf752579ddafdb7fbbe",
+          "promptHash": "24f22990dc9bb9f1977f513d76a4f90c0cbe989a2cb99d51229fc99a95e28f03",
+          "canonicalTokens": 927,
+          "wireTokens": 1794,
+          "wireBasisTokens": 928,
+          "refCount": 0
+        },
+        {
+          "name": "get_sentry_mcp_info",
+          "schemaHash": "9640717f9632594bd2c52b3187086c2055984c483d4e5a6e1908d5e025bc7af5",
+          "promptHash": "5de5303506a84105952aedff5ece686ca3624cdfe1ce51adf1eb355825c6316d",
+          "canonicalTokens": 80,
+          "wireTokens": 161,
+          "wireBasisTokens": 80,
+          "refCount": 0
+        },
+        {
+          "name": "get_sentry_resource",
+          "schemaHash": "6c59af1d75b627e959ac485543a95d77b7af055541effbecd157715a57063c1a",
+          "promptHash": "eadcc5dcaa9d658211e30da26579a3bf525020c737397624a4a039e47c73444f",
+          "canonicalTokens": 831,
+          "wireTokens": 855,
+          "wireBasisTokens": 828,
+          "refCount": 0
+        },
+        {
+          "name": "get_snapshot",
+          "schemaHash": "d008b7d2333b7ca64385dff552b826fd43e4f82bf51689a2cad3ff9a69788af6",
+          "promptHash": "6317a42cc065205a145187ddbdd871cdf2852b7c24d13ca348e5bef527c95992",
+          "canonicalTokens": 530,
+          "wireTokens": 1656,
+          "wireBasisTokens": 531,
+          "refCount": 0
+        },
+        {
+          "name": "get_snapshot_image",
+          "schemaHash": "95ba7aba5743935cdd33c0eed06be45c0e3a17c920eefba57494661cd38c11a4",
+          "promptHash": "0c7f6a43b0d621e3f735fa44481a128acb9d4d6b17963bfe6a7ffd2b398836f1",
+          "canonicalTokens": 565,
+          "wireTokens": 592,
+          "wireBasisTokens": 566,
+          "refCount": 0
+        },
+        {
+          "name": "get_latest_base_snapshot",
+          "schemaHash": "dbf76ee490a05ffe5e915313bdb4557dc5bfce7d65c4198f2f7841ed6436372a",
+          "promptHash": "f933fc7ab1bc91450d5a2fd9333868ad13337cdf0aec4a057a73c78a823d9dfd",
+          "canonicalTokens": 686,
+          "wireTokens": 1032,
+          "wireBasisTokens": 689,
+          "refCount": 0
+        },
+        {
+          "name": "get_agent_conversation_details",
+          "schemaHash": "f5ba01b2e7505180fa4a215da492907b9e9c05aae3268174598776caa6d6e27c",
+          "promptHash": "4eaf089a0c923d3ca50691850ac8b99d1e838bf5e5b0fedb29d91febffaa77c2",
+          "canonicalTokens": 318,
+          "wireTokens": 1440,
+          "wireBasisTokens": 317,
+          "refCount": 0
+        },
+        {
+          "name": "search_agent_conversations",
+          "schemaHash": "bc90e1b9fd586153f04d819ee24656957fb936bff7bef16cb18b959afc5877a0",
+          "promptHash": "a463d15fafa6c629f30a7748ef7f1537ee40a46db6bf8ed04d8ff7b4079ff43d",
+          "canonicalTokens": 581,
+          "wireTokens": 996,
+          "wireBasisTokens": 579,
+          "refCount": 0
+        },
+        {
+          "name": "add_issue_note",
+          "schemaHash": "a6428522b184e826de42f1f657dd0a6d021d1fe79cf4e9870d65e99c2e987db4",
+          "promptHash": "918273c854fc2fe6e6eb35ce586a8627b594f17d0e4f82694c258759dd42e531",
+          "canonicalTokens": 417,
+          "wireTokens": 583,
+          "wireBasisTokens": 419,
+          "refCount": 0
+        },
+        {
+          "name": "onboarding_status_update",
+          "schemaHash": "e70b8626944ab2c4927caeb2bc3aac47c2fbee91b989dcbed27e2ff6dc53317b",
+          "promptHash": "f1cf37ea34de16da4093649038abf4b97e7f1187a3ec40f2e03d17ec73944d46",
+          "canonicalTokens": 1026,
+          "wireTokens": 1116,
+          "wireBasisTokens": 1022,
+          "refCount": 0
+        },
+        {
+          "name": "submit_feedback_to_sentry_team",
+          "schemaHash": "1b2e15ce4d1d0b62ff312b9c6d18f37fec97fedc5760a22c8c79829e23f08f32",
+          "promptHash": "980691a4334a23ac37b84202285a883973ca78b64fccf417cdff6c8a8f861efe",
+          "canonicalTokens": 415,
+          "wireTokens": 504,
+          "wireBasisTokens": 414,
+          "refCount": 0
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 46249,
+      "wireTokens": 77385,
+      "wireBasisTokens": 46310,
+      "frameTokens": 2,
+      "contextBudget": 77387,
+      "refCount": 0,
+      "schemaReuseRatio": 1.0013189474367012,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "server-brave-search",
+      "package": "@modelcontextprotocol/server-brave-search",
+      "bucket": "list-env-gated",
+      "capturedAt": "2026-11-13T14:00:02.378Z",
+      "caveat": "Promoted via a placeholder env var (not a real credential). The real tool list may vary by credential scope from what the placeholder probe saw (DECISIONS.md #12).",
+      "observedVersion": "0.6.2",
+      "tools": [
+        {
+          "name": "brave_web_search",
+          "schemaHash": "bf2060119ec4321e6d1eef25b9258908f1948869e0f23cc70a8c6da140f88283",
+          "promptHash": "0f600ca9df147067f8fe5768b99ad3b776708398e5df5572212d9f4785f77b5e",
+          "canonicalTokens": 163,
+          "wireTokens": 161,
+          "wireBasisTokens": 161,
+          "refCount": 0
+        },
+        {
+          "name": "brave_local_search",
+          "schemaHash": "6e6f411802d5d393fc6952c881ac3564faf807ba4077332ac720a64f1e696deb",
+          "promptHash": "814e472a5ed71ce6d3cfaa6d609b35f64f056f93968171b1582644d00aee39c4",
+          "canonicalTokens": 157,
+          "wireTokens": 156,
+          "wireBasisTokens": 156,
+          "refCount": 0
+        }
+      ],
+      "prompts": [],
+      "canonicalTokens": 320,
+      "wireTokens": 317,
+      "wireBasisTokens": 317,
+      "frameTokens": 2,
+      "contextBudget": 319,
+      "refCount": 0,
+      "schemaReuseRatio": 0.990625,
+      "stableAcrossSpawns": true
+    },
+    {
+      "name": "stripe-mcp",
+      "package": "@stripe/mcp",
+      "bucket": "list-timeout",
+      "capturedAt": "2026-11-13T14:00:04.460Z",
+      "reason": "tools/list proxies to a live authenticated HTTP endpoint; a placeholder key gets a real 401 from that endpoint, and the local process hangs rather than failing cleanly — the probe's timeout is what ends it, not the server (Phase 0 spike 3). Kept in the seed list with no measurement, per DECISIONS.md #12."
+    }
+  ],
+  "drift": {
+    "previousSnapshot": "2026-11-12",
+    "driftedCount": 0,
+    "byBucket": {},
+    "servers": [],
+    "seedListChanged": {
+      "added": [],
+      "removed": []
+    },
+    "captureStatusChanged": []
+  }
+}
